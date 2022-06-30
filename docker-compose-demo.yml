@@ -1,0 +1,379 @@
+version: "3.9"
+
+networks:
+  default:
+    name: demo-instill-network
+
+volumes:
+  demo_vdp:
+    name: demo-vdp
+  demo_airbyte:
+    name: demo-airbyte
+  demo_conda_pack:
+    name: demo-conda-pack
+  demo_model_repository:
+    name: demo-model-repository
+
+services:
+  # krakend:
+  #   container_name: krakend
+  #   image: devopsfaith/krakend:${KRAKEND_VERSION}
+  #   restart: unless-stopped
+  #   command: run --config /etc/krakend/krakend.json
+  #   ports:
+  #     - 18080:8080
+  #   volumes:
+  #     - ./krakend.json:/etc/krakend/krakend.json
+
+  nginx:
+    container_name: nginx
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - 18080:8080
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+  pipeline_backend_migrate:
+    container_name: demo-pipeline-backend-migrate
+    image: instill/pipeline-backend:${PIPELINE_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+    entrypoint: ./pipeline-backend-migrate
+    depends_on:
+      pg_sql:
+        condition: service_healthy
+
+  pipeline_backend:
+    container_name: demo-pipeline-backend
+    image: instill/pipeline-backend:${PIPELINE_BACKEND_VERSION}
+    restart: unless-stopped
+    environment:
+      CFG_SERVER_PORT: 8081
+      CFG_SERVER_DEBUG: "false"
+      CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
+      CFG_SERVER_EDITION: local-ce:demo
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_MGMTBACKEND_HOST: demo-mgmt-backend
+      CFG_MGMTBACKEND_PORT: 8084
+      CFG_CONNECTORBACKEND_HOST: demo-connector-backend
+      CFG_CONNECTORBACKEND_PORT: 8082
+      CFG_MODELBACKEND_HOST: demo-model-backend
+      CFG_MODELBACKEND_PORT: 8083
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
+      CFG_CACHE_REDIS_REDISOPTIONS_ADDR: demo-redis:6379
+      CFG_SERVER_CORSORIGINS: http://localhost:13000
+    ports:
+      - 18081:8081
+    entrypoint: ./pipeline-backend
+    depends_on:
+      - pipeline_backend_migrate
+      - mgmt_backend
+      - connector_backend
+      - model_backend
+      - temporal
+      - redis
+
+  connector_backend_migrate:
+    container_name: demo-connector-backend-migrate
+    image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+    entrypoint: ./connector-backend-migrate
+    depends_on:
+      pg_sql:
+        condition: service_healthy
+
+  connector_backend_init:
+    container_name: demo-connector-backend-init
+    image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+    entrypoint: ./connector-backend-init
+    depends_on:
+      - connector_backend_migrate
+
+  connector_backend_worker:
+    container_name: demo-connector-backend-worker
+    image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
+    restart: unless-stopped
+    environment:
+      CFG_WORKER_MOUNTSOURCE_VDP: demo-vdp
+      CFG_WORKER_MOUNTSOURCE_AIRBYTE: demo-airbyte
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
+    volumes:
+      - demo_vdp:/vdp
+      - demo_airbyte:/airbyte
+      - /var/run/docker.sock:/var/run/docker.sock
+    entrypoint: ./connector-backend-worker
+    depends_on:
+      - connector_backend_init
+      - temporal
+
+  connector_backend:
+    container_name: demo-connector-backend
+    image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
+    restart: unless-stopped
+    environment:
+      CFG_SERVER_PORT: 8082
+      CFG_SERVER_DEBUG: "false"
+      CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
+      CFG_SERVER_EDITION: local-ce:demo
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_MGMTBACKEND_HOST: demo-mgmt-backend
+      CFG_MGMTBACKEND_PORT: 8084
+      CFG_PIPELINEBACKEND_HOST: demo-pipeline-backend
+      CFG_PIPELINEBACKEND_PORT: 8081
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
+      CFG_SERVER_CORSORIGINS: http://localhost:13000
+    ports:
+      - 18082:8082
+    entrypoint: ./connector-backend
+    depends_on:
+      - connector_backend_worker
+      - mgmt_backend
+
+  model_backend_migrate:
+    container_name: demo-model-backend-migrate
+    image: instill/model-backend:${MODEL_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+    entrypoint: ./model-backend-migrate
+    depends_on:
+      pg_sql:
+        condition: service_healthy
+
+  model_backend_init:
+    container_name: demo-model-backend-init
+    image: instill/model-backend:${MODEL_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+    entrypoint: ./model-backend-init
+    depends_on:
+      - model_backend_migrate
+
+  model_backend:
+    container_name: demo-model-backend
+    image: instill/model-backend:${MODEL_BACKEND_VERSION}
+    restart: unless-stopped
+    environment:
+      CFG_SERVER_PORT: 8083
+      CFG_SERVER_DEBUG: "false"
+      CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
+      CFG_SERVER_EDITION: local-ce:demo
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_MGMTBACKEND_HOST: demo-mgmt-backend
+      CFG_MGMTBACKEND_PORT: 8084
+      CFG_PIPELINEBACKEND_HOST: demo-pipeline-backend
+      CFG_PIPELINEBACKEND_PORT: 8081
+      CFG_TRITONSERVER_GRPCURI: demo-triton-server:8001
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
+      CFG_CACHE_REDIS_REDISOPTIONS_ADDR: demo-redis:6379
+      CFG_TRITONSERVER_MODELSTORE: /model-repository
+      CFG_SERVER_CORSORIGINS: http://localhost:13000
+    ports:
+      - 18083:8083
+    volumes:
+      - demo_model_repository:/model-repository
+    entrypoint: ./model-backend
+    depends_on:
+      triton_server:
+        condition: service_healthy
+      model_backend_init:
+        condition: service_completed_successfully
+
+  mgmt_backend_migrate:
+    container_name: demo-mgmt-backend-migrate
+    image: instill/mgmt-backend:${MGMT_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+    entrypoint: ./mgmt-backend-migrate
+    depends_on:
+      pg_sql:
+        condition: service_healthy
+
+  mgmt_backend_init:
+    container_name: demo-mgmt-backend-init
+    image: instill/mgmt-backend:${MGMT_BACKEND_VERSION}
+    restart: on-failure
+    environment:
+      CFG_SERVER_PORT: 8084
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+    entrypoint: ./mgmt-backend-init
+    depends_on:
+      - mgmt_backend_migrate
+
+  mgmt_backend:
+    container_name: demo-mgmt-backend
+    image: instill/mgmt-backend:${MGMT_BACKEND_VERSION}
+    restart: unless-stopped
+    environment:
+      CFG_SERVER_PORT: 8084
+      CFG_SERVER_DEBUG: "false"
+      CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
+      CFG_SERVER_EDITION: local-ce:demo
+      CFG_DATABASE_HOST: demo-pg-sql
+      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_SERVER_CORSORIGINS: http://localhost:13000
+    ports:
+      - 18084:8084
+    entrypoint: ./mgmt-backend
+    depends_on:
+      - mgmt_backend_init
+
+  triton_conda_env:
+    container_name: demo-triton-conda-env
+    image: ${TRITONCONDAENV_IMAGE_TAG}
+    volumes:
+      - demo_conda_pack:/conda-pack
+
+  triton_server:
+    container_name: demo-triton-server
+    image: ${TRITONSERVER_IMAGE_TAG}
+    restart: unless-stopped
+    command: tritonserver --model-store=/model-repository --model-control-mode=explicit --allow-http=true --strict-model-config=false
+    ports:
+      - 18001:8001
+    volumes:
+      - demo_model_repository:/model-repository
+      - demo_conda_pack:/conda-pack
+    healthcheck:
+      test: ["CMD-SHELL", "curl localhost:8000/v2/health/ready"]
+      timeout: 20s
+      retries: 10
+    shm_size: 2gb
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    depends_on:
+      - triton_conda_env
+
+  pg_sql:
+    container_name: demo-pg-sql
+    image: postgres:${POSTGRESQL_VERSION}-alpine
+    restart: unless-stopped
+    ports:
+      - 15432:5432
+    environment:
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      timeout: 20s
+      retries: 10
+
+  temporal:
+    container_name: demo-temporal
+    image: temporalio/auto-setup:${TEMPORAL_VERSION}
+    restart: unless-stopped
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PWD=password
+      - POSTGRES_SEEDS=demo-pg-sql
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+    ports:
+      - 17233:7233
+    depends_on:
+      pg_sql:
+        condition: service_healthy
+
+  temporal_admin_tools:
+    container_name: demo-temporal-admin-tools
+    image: temporalio/admin-tools:${TEMPORAL_VERSION}
+    restart: unless-stopped
+    environment:
+      - TEMPORAL_CLI_ADDRESS=demo-temporal:7233
+    stdin_open: true
+    tty: true
+    depends_on:
+      - temporal
+
+  temporal_ui:
+    container_name: demo-temporal-ui
+    image: temporalio/ui:${TEMPORAL_UI_VERSION}
+    restart: unless-stopped
+    environment:
+      - TEMPORAL_ADDRESS=demo-temporal:7233
+    ports:
+      - 18088:8084
+    depends_on:
+      - temporal
+
+  redis:
+    container_name: demo-redis
+    image: ${REDIS_IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 16379:6379
+
+  redoc_openapi:
+    container_name: demo-redoc-openapi
+    image: redocly/redoc:v2.0.0-rc.70
+    environment:
+      - SPEC_URL=https://raw.githubusercontent.com/instill-ai/protobufs/main/openapiv2/openapiv2.swagger.yaml
+    ports:
+      - 13001:80
+
+  console:
+    container_name: demo-console
+    image: instill/console:${CONSOLE_VERSION}
+    restart: unless-stopped
+    environment:
+      - DISABLE_USAGE_COLLECTION=false      
+      - PIPELINE_API_ENDPOINT=http://demo-pipeline-backend:8081
+      - CONNECTOR_API_ENDPOINT=http://demo-connector-backend:8082
+      - MODEL_API_ENDPOINT=http://demo-model-backend:8083
+      - MGMT_API_ENDPOINT=http://demo-mgmt-backend:8084
+      - API_VERSION=v1alpha
+    ports:
+      - 13000:3000
+    depends_on:
+      - mgmt_backend
+      - connector_backend
+      - model_backend
+      - pipeline_backend
