@@ -261,9 +261,12 @@ services:
       - demo_conda_pack:/conda-pack
 
   triton_server:
+    runtime: ${TRITONSERVER_RUNTIME:-}
     container_name: demo-triton-server
     image: ${TRITONSERVER_IMAGE_TAG}
     restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: 1,2,3
     command: tritonserver --model-store=/model-repository --model-control-mode=explicit --allow-http=true --strict-model-config=false
     ports:
       - 18001:8001
