@@ -15,15 +15,6 @@ volumes:
     name: demo-model-repository
 
 services:
-  # krakend:
-  #   container_name: krakend
-  #   image: devopsfaith/krakend:${KRAKEND_VERSION}
-  #   restart: unless-stopped
-  #   command: run --config /etc/krakend/krakend.json
-  #   ports:
-  #     - 18080:8080
-  #   volumes:
-  #     - ./krakend.json:/etc/krakend/krakend.json
 
   nginx:
     container_name: nginx
@@ -364,12 +355,13 @@ services:
     image: instill/console:${CONSOLE_VERSION}
     restart: unless-stopped
     environment:
-      - DISABLE_USAGE_COLLECTION=false      
-      - PIPELINE_API_ENDPOINT=http://demo-pipeline-backend:8081
-      - CONNECTOR_API_ENDPOINT=http://demo-connector-backend:8082
-      - MODEL_API_ENDPOINT=http://demo-model-backend:8083
-      - MGMT_API_ENDPOINT=http://demo-mgmt-backend:8084
       - API_VERSION=v1alpha
+      - DISABLE_USAGE_COLLECTION=false      
+      - CONSOLE_DOMAIN=demo.instill.tech
+      - PIPELINE_API_ENDPOINT=https://demo.instill.tech
+      - CONNECTOR_API_ENDPOINT=https://demo.instill.tech
+      - MODEL_API_ENDPOINT=https://demo.instill.tech
+      - MGMT_API_ENDPOINT=https://demo.instill.tech
     ports:
       - 13000:3000
     depends_on:
