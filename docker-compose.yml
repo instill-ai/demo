@@ -15,7 +15,6 @@ volumes:
     name: demo-model-repository
 
 services:
-
   nginx:
     container_name: nginx
     image: nginx:stable-alpine
@@ -359,7 +358,7 @@ services:
     restart: unless-stopped
     environment:
       - API_VERSION=v1alpha
-      - DISABLE_USAGE_COLLECTION=false      
+      - DISABLE_USAGE_COLLECTION=false
       - CONSOLE_DOMAIN=demo.instill.tech
       - PIPELINE_API_ENDPOINT=https://demo.instill.tech
       - CONNECTOR_API_ENDPOINT=https://demo.instill.tech
@@ -372,3 +371,19 @@ services:
       - connector_backend
       - model_backend
       - pipeline_backend
+
+  yolov4_vs_yolov7:
+    container_name: demo-yolov4-vs-yolov7
+    image: instill/yolov4-vs-yolov7:latest
+    build:
+      context: ./streamlit/yolov4-vs-yolov7
+    restart: unless-stopped
+    environment:
+      - STREAMLIT_SERVER_BASEURLPATH=yolov4-vs-yolov7
+      - STREAMLIT_SERVER_ENABLECORS=false
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_HEADLESS=8501
+    ports:
+      - 18501:8501
+    entrypoint: /usr/local/bin/streamlit
+    command: run main.py -- --pipeline-backend-base-url=https://demo.instill.tech --yolov4=v1alpha/pipelines/yolov4 --yolov7=v1alpha/pipelines/yolov7

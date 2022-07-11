@@ -14,7 +14,7 @@ ifeq ($(NVIDIA_SMI),0)
 endif
 
 TRITONSERVER_IMAGE_TAG := $(if $(filter arm64,$(shell uname -m)),instill/tritonserver:${TRITON_SERVER_VERSION}-py3-cpu-arm64,nvcr.io/nvidia/tritonserver:${TRITON_SERVER_VERSION}-py3)
-TRITONCONDAENV_IMAGE_TAG := $(if $(filter Darwin arm64,$(shell uname -sm)),instill/triton-conda-env:${TRITON_CONDA_ENV_VERSION}-m1,instill/triton-conda-env:${TRITON_CONDA_ENV_VERSION}-cpu)
+TRITONCONDAENV_IMAGE_TAG := $(if $(filter arm64,$(shell uname -sm)),instill/triton-conda-env:${TRITON_CONDA_ENV_VERSION}-m1,instill/triton-conda-env:${TRITON_CONDA_ENV_VERSION}-cpu)
 REDIS_IMAGE_TAG := $(if $(filter arm64,$(shell uname -m)),arm64v8/redis:${REDIS_VERSION}-alpine,amd64/redis:${REDIS_VERSION}-alpine)
 
 #============================================================================
@@ -22,16 +22,16 @@ REDIS_IMAGE_TAG := $(if $(filter arm64,$(shell uname -m)),arm64v8/redis:${REDIS_
 .PHONY: all
 all:			## Launch all services with their up-to-date release version
 	@docker inspect --type=image ${TRITONSERVER_IMAGE_TAG} >/dev/null 2>&1 || printf "\033[1;33mWARNING:\033[0m This may take a while due to the enormous size of the Triton server image, but the image pulling process should be just a one-time effort.\n" && sleep 5
-	@docker-compose -f docker-compose-demo.yml up -d
+	@docker-compose up -d
 
 .PHONY: logs
 logs:			## Tail all logs with -n 10
-	@docker-compose -f docker-compose-demo.yml logs --follow --tail=10
+	@docker-compose logs --follow --tail=10
 
 .PHONY: pull
 pull:			## Pull all service images
 	@docker inspect --type=image ${TRITONSERVER_IMAGE_TAG} >/dev/null 2>&1 || printf "\033[1;33mWARNING:\033[0m This may take a while due to the enormous size of the Triton server image, but the image pulling process should be just a one-time effort.\n" && sleep 5
-	@docker-compose -f docker-compose-demo.yml pull
+	@docker-compose pull
 
 .PHONY: stop
 stop:			## Stop all components
@@ -51,7 +51,7 @@ rm:				## Remove all stopped service containers
 
 .PHONY: down
 down:			## Stop all services and remove all service containers and volumes
-	@docker-compose -f docker-compose-demo.yml down -v
+	@docker-compose down -v
 
 .PHONY: images
 images:			## List all container images
@@ -59,20 +59,11 @@ images:			## List all container images
 
 .PHONY: ps
 ps:				## List all service containers
-	@docker-compose -f docker-compose-demo.yml ps
+	@docker-compose ps
 
 .PHONY: top
 top:			## Display all running service processes
 	@docker-compose top
-
-.PHONY: build
-build:							## Build all dev docker images
-	@printf "set up latest mgmt-backend: " && [ ! -d "dev/mgmt-backend" ] && git clone https://github.com/instill-ai/mgmt-backend.git dev/mgmt-backend || git -C dev/mgmt-backend fetch && git -C dev/mgmt-backend reset --hard origin/main
-	@printf "set up latest pipeline-backend: " && [ ! -d "dev/pipeline-backend" ] && git clone https://github.com/instill-ai/pipeline-backend.git dev/pipeline-backend || git -C dev/pipeline-backend fetch && git -C dev/pipeline-backend reset --hard origin/main
-	@printf "set up latest connector-backend: " && [ ! -d "dev/connector-backend" ] && git clone https://github.com/instill-ai/connector-backend.git dev/connector-backend || git -C dev/connector-backend fetch && git -C dev/connector-backend reset --hard origin/main
-	@printf "set up latest model-backend: " && [ ! -d "dev/model-backend" ] && git clone https://github.com/instill-ai/model-backend.git dev/model-backend || git -C dev/model-backend fetch && git -C dev/model-backend reset --hard origin/main
-	@printf "set up latest console: " && [ ! -d "dev/console" ] && git clone https://github.com/instill-ai/console.git dev/console || git -C dev/console fetch && git -C dev/console reset --hard origin/main
-	@COMPOSE_PROFILES=$(PROFILE) docker-compose -f docker-compose-dev.yml build --parallel
 
 .PHONY: doc
 doc:			## Run Redoc for OpenAPI spec at http://localhost:3001

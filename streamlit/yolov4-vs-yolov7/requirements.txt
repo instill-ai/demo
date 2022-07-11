@@ -1,6 +1,6 @@
 streamlit
 watchdog
-opencv-python
+opencv-python-headless
 numpy
 pandas
 requests
