@@ -137,12 +137,15 @@ if __name__ == "__main__":
 
     pipeline_backend_base_url = opt.pipeline_backend_base_url + "/v1alpha"
 
-    f"""
-    # 🔥🔥🔥 [VDP + YOLOv7] What's in the 🖼️?
+    st.image("https://raw.githubusercontent.com/instill-ai/.github/main/img/vdp.svg")
 
-    [![Twitter URL](https://img.shields.io/twitter/url?style=social&url={opt.demo_url})](https://twitter.com/intent/tweet?hashtags=%2Cvdp%2Cyolov4%2Cyolov7%2Cstreamlit&original_referer=http%3A%2F%2Flocalhost%3A8501%2F&ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Ehashtag%7Ctwgr%5EYOLOv7&text=%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%20Try%20out%20VDP%20%2B%20YOLOv7%20demo&url={opt.demo_url})
-    [![Twitter URL](https://img.shields.io/twitter/url?label=share&logo=facebook&style=social&url={opt.demo_url})](https://www.facebook.com/sharer/sharer.php?kid_directed_site=0&sdk=joey&u={opt.demo_url}&display=popup&ref=plugin&src=share_button)
-    [![Twitter URL](https://img.shields.io/twitter/url?label=share&logo=linkedin&style=social&url={opt.demo_url})](https://www.linkedin.com/sharing/share-offsite/?url={opt.demo_url})
+    f"""
+
+    # 🔥 [VDP + YOLOv7] What's in the image?
+
+    [![Twitter URL](https://img.shields.io/twitter/url?logo=twitter&logoColor=ffffff&style=for-the-badge&url={opt.demo_url})](https://twitter.com/intent/tweet?hashtags=%2Cvdp%2Cyolov4%2Cyolov7%2Cstreamlit&original_referer=http%3A%2F%2Flocalhost%3A8501%2F&ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Ehashtag%7Ctwgr%5EYOLOv7&text=%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%20Try%20out%20VDP%20%2B%20YOLOv7%20demo&url={opt.demo_url})
+    [![Twitter URL](https://img.shields.io/twitter/url?logo=facebook&logoColor=ffffff&style=for-the-badge&url={opt.demo_url})](https://www.facebook.com/sharer/sharer.php?kid_directed_site=0&sdk=joey&u={opt.demo_url}&display=popup&ref=plugin&src=share_button)
+    [![Twitter URL](https://img.shields.io/twitter/url?logo=linkedin&logoColor=ffffff&style=for-the-badge&url={opt.demo_url})](https://www.linkedin.com/sharing/share-offsite/?url={opt.demo_url})
 
     [Visual Data Preparation (VDP)](https://github.com/instill-ai/vdp) is an open-source visual data ETL tool to streamline the end-to-end visual data processing pipeline
 
@@ -240,10 +243,7 @@ if __name__ == "__main__":
 
     """
     # 🚀 What's cool about VDP pipelines?
-    """
-    st.image("https://raw.githubusercontent.com/instill-ai/.github/main/img/vdp.svg")
 
-    """
     A VDP pipeline unlocks the value of unstructured visual data:
 
     1. **Extract** unstructured visual data from pre-built data sources such as cloud/on-prem storage, or IoT devices
@@ -257,13 +257,21 @@ if __name__ == "__main__":
 
     col1, col2 = st.columns(2)
     if success1:
-        _, df1 = gen_detection_table(boxes_ltwh1, categories1, scores1)
-        col1.dataframe(df1.style.highlight_between(
-            subset='Score', left=0.5, right=1.0))
+        _, df1 = gen_detection_table(
+            boxes_ltwh1, categories1, scores1)
+        if len(df1):
+            col1.dataframe(df1.style.highlight_between(
+                subset='Score', left=0.5, right=1.0))
+        else:
+            col1.dataframe(df1)
 
     if success2:
-        _, df2 = gen_detection_table(boxes_ltwh2, categories2, scores2)
-        col2.dataframe(df2.style.highlight_between(
-            subset='Score', left=0.5, right=1.0))
+        _, df2 = gen_detection_table(
+            boxes_ltwh2, categories2, scores2)
+        if len(df2):
+            col2.dataframe(df2.style.highlight_between(
+                subset='Score', left=0.5, right=1.0))
+        else:
+            col2.dataframe(df2)
 
     st.caption("Highlight detections with score >= 0.5")
