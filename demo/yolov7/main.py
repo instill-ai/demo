@@ -136,21 +136,23 @@ if __name__ == "__main__":
     # 🔥🔥🔥 [VDP + YOLOv7] What's in the 🖼️?
 
     [Visual Data Preparation (VDP)](https://github.com/instill-ai/vdp) is an open-source visual data ETL tool to streamline the end-to-end visual data processing pipeline
-    1. **Extract** unstructured visual data from pre-built data sources such as cloud/on-prem storage, or IoT devices
-    2. **Transform** it into analysable structured data by Vision AI models
-    3. **Load** the transformed data into warehouses, applications, or other destinations
 
-    We use open-source [**VDP**](https://github.com/instill-ai/vdp) to deploy the official [**YOLOv7**](https://github.com/WongKinYiu/yolov7) pre-trained model for the demo.
-    
-    👉 **Give us a ⭐ on [GitHub](https://github.com/instill-ai/vdp)**
-    
-    ⚡️ Join our [community](https://discord.gg/sevxWsqpGh) to learn the fastest way to build end-to-end visual data pipelines!
+    - 🚀 The fastest way to build end-to-end visual data pipelines
+    - 🖱️ One-click import & deploy ML/DL models
+    - 🤠 Build for every Vision AI and Data practitioner
 
+    """
+    st.markdown(
+        '<span style="color:DarkOrchid">**Give us a ⭐ on [GitHub](https://github.com/instill-ai/vdp) and join our [community](https://discord.gg/sevxWsqpGh)!**</span>', True)
+
+    """
     #### Free model hosting with Instill Cloud
     🚀 We offer freemium for hosting models in Instill Cloud. [Sign up alpha user form](https://www.instill.tech/get-access) now and we will contact you to onboard your models.
-    """
+    
+    ## Demo
 
-    st.markdown("## Demo")
+    We use open-source [**VDP**](https://github.com/instill-ai/vdp) to deploy the official [**YOLOv7**](https://github.com/WongKinYiu/yolov7) pre-trained model for the demo.
+    """
     image_url = st.text_input(
         label="Feed me with an image URL and press ENTER", value="https://artifacts.instill.tech/dog.jpg")
 
