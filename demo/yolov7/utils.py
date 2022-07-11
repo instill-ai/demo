@@ -1,8 +1,11 @@
 
+from cProfile import label
 import random
+import cv2
+import pandas as pd
+import numpy as np
 from enum import Enum
 from typing import List, Tuple
-import cv2
 
 
 class COCOLabels(Enum):
@@ -135,3 +138,28 @@ def draw_detection(img: cv2.Mat, boxes_ltwh: List[Tuple[float]], categories: Lis
             [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
     return img_draw
+
+
+def gen_detection_table(boxes_ltwh: List[Tuple[float]], categories: List[str], scores: List[float]) -> Tuple[bool, pd.DataFrame]:
+    data = {
+        "Label": [],
+        "Left": [],
+        "Top": [],
+        "Width": [],
+        "Height": [],
+        "Score": []
+    }
+
+    if len(boxes_ltwh) != len(categories) or len(boxes_ltwh) != len(scores):
+        return False, pd.DataFrame(data)
+
+    for box_ltwh, category, score in zip(boxes_ltwh, categories, scores):
+        left, top, width, height = box_ltwh
+        data["Label"].append(category)
+        data["Left"].append(int(left))
+        data["Top"].append(int(top))
+        data["Width"].append(int(width))
+        data["Height"].append(int(height))
+        data["Score"].append(score)
+
+    return True, pd.DataFrame(data)

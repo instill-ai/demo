@@ -2,6 +2,7 @@ streamlit
 watchdog
 opencv-python
 numpy
+pandas
 requests
 pyyaml
 argparse

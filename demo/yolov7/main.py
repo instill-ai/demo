@@ -8,7 +8,7 @@ import streamlit as st
 from types import SimpleNamespace
 from typing import List, Tuple
 
-from utils import draw_detection
+from utils import draw_detection, gen_detection_table
 
 
 def test_yolo_w_remote_image(model_backend_base_url: str, model_instance_name: str, image_url: str) -> Tuple[bool, List[Tuple[float]], List[str], List[float]]:
@@ -84,6 +84,7 @@ def trigger_yolo_pipeline_w_remote_image(pipeline_backend_base_url: str, pipelin
 
     Returns: a tuple of
         bool: a flag to indicate whether the response is successful
+        json: response json object
         List[Tuple[float]]: a list of detected bounding boxes in the format of (top, left, width, height)
         List[str]: a list of category labels, each of which corresponds to a detected bounding box. The length of this list must be the same as the detected bounding boxes.
         List[float]]: a list of scores, each of which corresponds to a detected bounding box. The length of this list must be the same as the detected bounding boxes.
@@ -109,7 +110,7 @@ def trigger_yolo_pipeline_w_remote_image(pipeline_backend_base_url: str, pipelin
     boxes_ltwh = []
     categories = []
     scores = []
-    for v in r.output.detection_outputs[0].bounding_box_objects:
+    for v in r.output[0].detection_outputs[0].bounding_box_objects:
         boxes_ltwh.append((
             v.bounding_box.left,
             v.bounding_box.top,
@@ -118,19 +119,21 @@ def trigger_yolo_pipeline_w_remote_image(pipeline_backend_base_url: str, pipelin
         categories.append(v.category)
         scores.append(v.score)
 
-    return True, boxes_ltwh, categories, scores
+    return True, resp.json(), boxes_ltwh, categories, scores
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model-backend-base-url', type=str,
-                        default='http://localhost:8083/v1alpha', help='model backend base URL')
+    parser.add_argument('--pipeline-backend-base-url', type=str,
+                        default='http://localhost:8081/v1alpha', help='pipeline backend base URL')
     parser.add_argument('--yolov4', type=str,
-                        default='models/yolov4/instances/v1.0-cpu', help='YOLOv4 model instance resource name on VDP')
+                        default='pipelines/yolov4', help='YOLOv4 pipeline resource name on VDP')
     parser.add_argument('--yolov7', type=str,
-                        default='models/yolov7/instances/v1.0-cpu', help='YOLOv4 model instance resource name on VDP')
+                        default='pipelines/yolov7', help='YOLOv7 pipeline resource name on VDP')
     opt = parser.parse_args()
     print(opt)
+
+    # st.set_page_config(layout="wide")
 
     """
     # 🔥🔥🔥 [VDP + YOLOv7] What's in the 🖼️?
@@ -146,12 +149,14 @@ if __name__ == "__main__":
         '<span style="color:DarkOrchid">**Give us a ⭐ on [GitHub](https://github.com/instill-ai/vdp) and join our [community](https://discord.gg/sevxWsqpGh)!**</span>', True)
 
     """
-    #### Free model hosting with Instill Cloud
+    # Free model hosting with Instill Cloud
     🚀 We offer freemium for hosting models in Instill Cloud. [Sign up alpha user form](https://www.instill.tech/get-access) now and we will contact you to onboard your models.
-    
-    ## Demo
+
+    # Demo
 
     We use open-source [**VDP**](https://github.com/instill-ai/vdp) to deploy the official [**YOLOv7**](https://github.com/WongKinYiu/yolov7) pre-trained model for the demo.
+
+    To spice things up, we create two pipelines: one with the classic YOLOv4 model, the other with the new YOLOv7. Let's trigger two pipelines with the same input image.
     """
     image_url = st.text_input(
         label="Feed me with an image URL and press ENTER", value="https://artifacts.instill.tech/dog.jpg")
@@ -170,16 +175,22 @@ if __name__ == "__main__":
         use_column_width=True,
         caption=f"Image source: {image_url}")
 
-    st.markdown("#### YOLOv4 vs. YOLOv7 detection")
+    """
+    #### [VDP pipeline] YOLOv4 vs. YOLOv7
+
+    Spot any difference?
+    """
+
     col1, col2 = st.columns(2)
 
-    success1, boxes_ltwh1, categories1, scores1 = test_yolo_w_remote_image(
-        opt.model_backend_base_url, opt.yolov4, image_url)
+    success1, resp1, boxes_ltwh1, categories1, scores1 = trigger_yolo_pipeline_w_remote_image(
+        opt.pipeline_backend_base_url, opt.yolov4, image_url)
 
-    success2, boxes_ltwh2, categories2, scores2 = test_yolo_w_remote_image(
-        opt.model_backend_base_url, opt.yolov7, image_url)
+    success2, resp2, boxes_ltwh2, categories2, scores2 = trigger_yolo_pipeline_w_remote_image(
+        opt.pipeline_backend_base_url, opt.yolov7, image_url)
 
     if success1:
+        # Show image overlaid with detection results
         img_draw1 = draw_detection(img, boxes_ltwh1, categories1, scores1)
         col1.image(
             img_draw1, use_column_width=True,
@@ -188,9 +199,59 @@ if __name__ == "__main__":
         col1.error("YOLOv4 inference error")
 
     if success2:
+        # Show image overlaid with detection results
         img_draw2 = draw_detection(img, boxes_ltwh2, categories2, scores2)
         col2.image(
             img_draw2, use_column_width=True,
             caption=f"YOLOv7")
     else:
         col2.error("YOLOv7 inference error")
+
+    # Show request
+    code = f"""curl -X POST '{opt.pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{{
+        "inputs": [
+            {{
+                "image_url": "{image_url}"
+            }}
+        ]
+    }}' 
+    """
+    with st.expander(f"cURL: trigger pipeline"):
+        st.code(code, language="bash")
+
+    col1, col2 = st.columns(2)
+    if success1:
+        # Show response
+        with col1.expander(f"POST /pipelines/{opt.yolov4}:trigger response"):
+            st.json(resp1)
+
+    if success2:
+        # Show response
+        with col2.expander(f"POST /pipelines/{opt.yolov7}:trigger response"):
+            st.json(resp2)
+
+    """
+    # 🚀 What's cool about VDP pipelines?
+
+    A VDP pipeline unlocks the value of unstructured visual data:
+
+    1. **Extract** unstructured visual data from pre-built data sources such as cloud/on-prem storage, or IoT devices
+
+    2. **Transform** it into analysable structured data by Vision AI models
+
+    3. **Load** the transformed data into warehouses, applications, or other destinations
+
+    With the help of the VDP pipeline, you can start manipulating the structured data like below in the destination using the tooling in modern data stack.
+
+    """
+
+    col1, col2 = st.columns(2)
+    if success1:
+        _, df1 = gen_detection_table(boxes_ltwh1, categories1, scores1)
+        col1.dataframe(df1.style.highlight_max(subset='Score', axis=0))
+
+    if success2:
+        _, df2 = gen_detection_table(boxes_ltwh2, categories2, scores2)
+        col2.dataframe(df2.style.highlight_max(subset='Score', axis=0))
