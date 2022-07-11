@@ -1,0 +1,7 @@
+streamlit
+watchdog
+opencv-python
+numpy
+requests
+pyyaml
+argparse
