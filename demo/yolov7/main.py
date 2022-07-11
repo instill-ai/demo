@@ -162,12 +162,13 @@ if __name__ == "__main__":
     img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
     # Visualization
-    st.image(
+    col1, col2, col3 = st.columns([0.2, 0.6, 0.2])
+    col2.image(
         img,
         use_column_width=True,
         caption=f"Image source: {image_url}")
 
-    st.markdown("#### YOLOv4 vs. YOLOv7 detection results")
+    st.markdown("#### YOLOv4 vs. YOLOv7 detection")
     col1, col2 = st.columns(2)
 
     success1, boxes_ltwh1, categories1, scores1 = test_yolo_w_remote_image(
