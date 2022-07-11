@@ -149,7 +149,7 @@ if __name__ == "__main__":
         '<span style="color:DarkOrchid">**Give us a ⭐ on [GitHub](https://github.com/instill-ai/vdp) and join our [community](https://discord.gg/sevxWsqpGh)!**</span>', True)
 
     """
-    # Free model hosting with Instill Cloud
+    #### Free model hosting with Instill Cloud
     🚀 We offer freemium for hosting models in Instill Cloud. [Sign up alpha user form](https://www.instill.tech/get-access) now and we will contact you to onboard your models.
 
     # Demo
@@ -234,7 +234,10 @@ if __name__ == "__main__":
 
     """
     # 🚀 What's cool about VDP pipelines?
+    """
+    st.image("https://raw.githubusercontent.com/instill-ai/.github/main/img/vdp.svg")
 
+    """
     A VDP pipeline unlocks the value of unstructured visual data:
 
     1. **Extract** unstructured visual data from pre-built data sources such as cloud/on-prem storage, or IoT devices
