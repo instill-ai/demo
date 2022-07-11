@@ -124,6 +124,8 @@ def trigger_yolo_pipeline_w_remote_image(pipeline_backend_base_url: str, pipelin
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('--demo-url', type=str,
+                        default='https://demo.instill.tech/yolov4-vs-yolov7', help='demo URL')
     parser.add_argument('--pipeline-backend-base-url', type=str,
                         default='http://localhost:8081/v1alpha', help='pipeline backend base URL')
     parser.add_argument('--yolov4', type=str,
@@ -133,10 +135,12 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     print(opt)
 
-    # st.set_page_config(layout="wide")
-
-    """
+    f"""
     # 🔥🔥🔥 [VDP + YOLOv7] What's in the 🖼️?
+
+    [![Twitter URL](https://img.shields.io/twitter/url?style=social&url={opt.demo_url})](https://twitter.com/intent/tweet?hashtags=%2Cvdp%2Cyolov4%2Cyolov7%2Cstreamlit&original_referer=http%3A%2F%2Flocalhost%3A8501%2F&ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Ehashtag%7Ctwgr%5EYOLOv7&text=%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%20Try%20out%20VDP%20%2B%20YOLOv7%20demo&url={opt.demo_url})
+    [![Twitter URL](https://img.shields.io/twitter/url?label=share&logo=facebook&style=social&url={opt.demo_url})](https://www.facebook.com/sharer/sharer.php?kid_directed_site=0&sdk=joey&u={opt.demo_url}&display=popup&ref=plugin&src=share_button)
+    [![Twitter URL](https://img.shields.io/twitter/url?label=share&logo=linkedin&style=social&url={opt.demo_url})](https://www.linkedin.com/sharing/share-offsite/?url={opt.demo_url})
 
     [Visual Data Preparation (VDP)](https://github.com/instill-ai/vdp) is an open-source visual data ETL tool to streamline the end-to-end visual data processing pipeline
 
