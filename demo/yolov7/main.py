@@ -247,14 +247,17 @@ if __name__ == "__main__":
     3. **Load** the transformed data into warehouses, applications, or other destinations
 
     With the help of the VDP pipeline, you can start manipulating the structured data like below in the destination using the tooling in modern data stack.
-
     """
 
     col1, col2 = st.columns(2)
     if success1:
         _, df1 = gen_detection_table(boxes_ltwh1, categories1, scores1)
-        col1.dataframe(df1.style.highlight_max(subset='Score', axis=0))
+        col1.dataframe(df1.style.highlight_between(
+            subset='Score', left=0.5, right=1.0))
 
     if success2:
         _, df2 = gen_detection_table(boxes_ltwh2, categories2, scores2)
-        col2.dataframe(df2.style.highlight_max(subset='Score', axis=0))
+        col2.dataframe(df2.style.highlight_between(
+            subset='Score', left=0.5, right=1.0))
+
+    st.caption("Highlight detections with score >= 0.5")
