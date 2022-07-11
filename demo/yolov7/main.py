@@ -127,13 +127,15 @@ if __name__ == "__main__":
     parser.add_argument('--demo-url', type=str,
                         default='https://demo.instill.tech/yolov4-vs-yolov7', help='demo URL')
     parser.add_argument('--pipeline-backend-base-url', type=str,
-                        default='http://localhost:8081/v1alpha', help='pipeline backend base URL')
+                        default='http://localhost:8081', help='pipeline backend base URL')
     parser.add_argument('--yolov4', type=str,
                         default='pipelines/yolov4', help='YOLOv4 pipeline resource name on VDP')
     parser.add_argument('--yolov7', type=str,
                         default='pipelines/yolov7', help='YOLOv7 pipeline resource name on VDP')
     opt = parser.parse_args()
     print(opt)
+
+    pipeline_backend_base_url = opt.pipeline_backend_base_url + "/v1alpha"
 
     f"""
     # 🔥🔥🔥 [VDP + YOLOv7] What's in the 🖼️?
@@ -188,10 +190,10 @@ if __name__ == "__main__":
     col1, col2 = st.columns(2)
 
     success1, resp1, boxes_ltwh1, categories1, scores1 = trigger_yolo_pipeline_w_remote_image(
-        opt.pipeline_backend_base_url, opt.yolov4, image_url)
+        pipeline_backend_base_url, opt.yolov4, image_url)
 
     success2, resp2, boxes_ltwh2, categories2, scores2 = trigger_yolo_pipeline_w_remote_image(
-        opt.pipeline_backend_base_url, opt.yolov7, image_url)
+        pipeline_backend_base_url, opt.yolov7, image_url)
 
     if success1:
         # Show image overlaid with detection results
@@ -212,7 +214,7 @@ if __name__ == "__main__":
         col2.error("YOLOv7 inference error")
 
     # Show request
-    code = f"""curl -X POST '{opt.pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \
+    code = f"""curl -X POST '{pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \
     --header 'Content-Type: application/json' \
     --data-raw '{{
         "inputs": [
