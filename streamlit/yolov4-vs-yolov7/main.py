@@ -135,17 +135,19 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     print(opt)
 
+    st.set_page_config(page_title="VDP - YOLOv4 vs. YOLOv7", page_icon="https://www.instill.tech/favicon-32x32.png", layout="centered", initial_sidebar_state="auto")
+
     pipeline_backend_base_url = opt.pipeline_backend_base_url + "/v1alpha"
 
     st.image("https://raw.githubusercontent.com/instill-ai/.github/main/img/vdp.svg")
 
     f"""
 
-    # 🔥 [VDP + YOLOv7] What's in the image?
+    # YOLOv4 vs. YOLOv7
 
-    [![Twitter URL](https://img.shields.io/twitter/url?logo=twitter&logoColor=ffffff&style=for-the-badge&url={opt.demo_url})](https://twitter.com/intent/tweet?hashtags=%2Cvdp%2Cyolov4%2Cyolov7%2Cstreamlit&original_referer=http%3A%2F%2Flocalhost%3A8501%2F&ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Ehashtag%7Ctwgr%5EYOLOv7&text=%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%20Try%20out%20VDP%20%2B%20YOLOv7%20demo&url={opt.demo_url})
-    [![Twitter URL](https://img.shields.io/twitter/url?logo=facebook&logoColor=ffffff&style=for-the-badge&url={opt.demo_url})](https://www.facebook.com/sharer/sharer.php?kid_directed_site=0&sdk=joey&u={opt.demo_url}&display=popup&ref=plugin&src=share_button)
-    [![Twitter URL](https://img.shields.io/twitter/url?logo=linkedin&logoColor=ffffff&style=for-the-badge&url={opt.demo_url})](https://www.linkedin.com/sharing/share-offsite/?url={opt.demo_url})
+    [![Twitter](https://img.shields.io/badge/Twitter-%231DA1F2.svg?style=for-the-badge&logo=Twitter&logoColor=white)](https://twitter.com/intent/tweet?hashtags=%2Cvdp%2Cyolov4%2Cyolov7%2Cstreamlit&original_referer=http%3A%2F%2Flocalhost%3A8501%2F&ref_src=twsrc%5Etfw%7Ctwcamp%5Ebuttonembed%7Ctwterm%5Ehashtag%7Ctwgr%5EYOLOv7&text=%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%20Try%20out%20VDP%20%2B%20YOLOv7%20demo&url={opt.demo_url})
+    [![Facebook](https://img.shields.io/badge/Facebook-%231877F2.svg?style=for-the-badge&logo=Facebook&logoColor=white)](https://www.facebook.com/sharer/sharer.php?kid_directed_site=0&sdk=joey&u={opt.demo_url}&display=popup&ref=plugin&src=share_button)
+    [![LinkedIn](https://img.shields.io/badge/linkedin-%230077B5.svg?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/sharing/share-offsite/?url={opt.demo_url})
 
     [Visual Data Preparation (VDP)](https://github.com/instill-ai/vdp) is an open-source visual data ETL tool to streamline the end-to-end visual data processing pipeline
 
@@ -153,19 +155,19 @@ if __name__ == "__main__":
     - 🖱️ One-click import & deploy ML/DL models
     - 🤠 Build for every Vision AI and Data practitioner
 
-    """
-    st.markdown(
-        '<span style="color:DarkOrchid">**Give us a ⭐ on [GitHub](https://github.com/instill-ai/vdp) and join our [community](https://discord.gg/sevxWsqpGh)!**</span>', True)
+    Give us a ⭐ on [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/instill-ai/vdp) and join our [![Discord](https://img.shields.io/badge/Community-%237289DA.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/sevxWsqpGh)
 
-    """
-    #### Free model hosting with Instill Cloud
-    🚀 We offer freemium for hosting models in Instill Cloud. [Sign up alpha user form](https://www.instill.tech/get-access) now and we will contact you to onboard your models.
+    #### We are offering **FREE** fully-managed VDP on Instill Cloud
+    If you are interested in sharing with the world what your models are capable of, please [sign up the form](https://www.instill.tech/get-access) and we will reach out to you. Seats are limited - first come , first served.
 
     # Demo
 
-    We use open-source [**VDP**](https://github.com/instill-ai/vdp) to deploy the official [**YOLOv7**](https://github.com/WongKinYiu/yolov7) pre-trained model for the demo.
-
-    To spice things up, we create two pipelines: one with the classic YOLOv4 model, the other with the new YOLOv7. Let's trigger two pipelines with the same input image.
+    To spice things up, we use open-source [VDP](https://github.com/instill-ai/vdp) to import the official [YOLOv4](https://github.com/AlexeyAB/darknet) and [YOLOv7](https://github.com/WongKinYiu/yolov7) models pre-trained with only [MS-COCO](https://cocodataset.org) dataset. VDP instantly gives us the endpoints to perform inference:
+    1. https://demo.instill.tech/v1alpha/pipelines/yolov4:trigger        
+    2. https://demo.instill.tech/v1alpha/pipelines/yolov7:trigger        
+        
+    Let's trigger two pipelines with an input image each:
+    
     """
     image_url = st.text_input(
         label="Feed me with an image URL and press ENTER", value="https://artifacts.instill.tech/dog.jpg")
@@ -185,7 +187,7 @@ if __name__ == "__main__":
         caption=f"Image source: {image_url}")
 
     """
-    #### [VDP pipeline] YOLOv4 vs. YOLOv7
+    #### Results
 
     Spot any difference?
     """
@@ -227,7 +229,7 @@ if __name__ == "__main__":
         ]
     }}' 
     """
-    with st.expander(f"cURL: trigger pipeline"):
+    with st.expander(f"cURL"):
         st.code(code, language="bash")
 
     col1, col2 = st.columns(2)
@@ -242,7 +244,7 @@ if __name__ == "__main__":
             st.json(resp2)
 
     """
-    # 🚀 What's cool about VDP pipelines?
+    # What's cool about VDP?
 
     A VDP pipeline unlocks the value of unstructured visual data:
 
