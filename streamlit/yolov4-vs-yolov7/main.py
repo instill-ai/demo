@@ -103,7 +103,7 @@ def trigger_yolo_pipeline_w_remote_image(pipeline_backend_base_url: str, pipelin
         "{}/{}:trigger".format(pipeline_backend_base_url, pipeline_name), json=body)
 
     if resp.status_code != 200:
-        return False, [], [], []
+        return False, resp.json(), [], [], []
 
     # Parse JSON into an object with attributes corresponding to dict keys.
     r = json.loads(resp.text, object_hook=lambda d: SimpleNamespace(**d))
