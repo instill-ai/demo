@@ -160,7 +160,7 @@ if __name__ == "__main__":
     Give us a ⭐ on [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/instill-ai/vdp) and join our [![Discord](https://img.shields.io/badge/Community-%237289DA.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/sevxWsqpGh)
 
     #### We are offering **FREE** fully-managed VDP on Instill Cloud
-    If you are interested in sharing with the world what your models are capable of, please [sign up the form](https://www.instill.tech/get-access) and we will reach out to you. Seats are limited - first come , first served.
+    If you are interested in showcasing your models, please [sign up the form](https://www.instill.tech/get-access) and we will reach out to you. Seats are limited - first come , first served.
 
     # Demo
 
@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
     3. **Load** the transformed data into warehouses, applications, or other destinations
 
-    With the help of the VDP pipeline, you can start manipulating the structured data like below in the destination using the tooling in modern data stack.
+    With the help of the VDP pipeline, you can start manipulating the data using other structured data tooling in the modern data stack. The results of the above demo will be streamed to the destination data warehouse like:
     """
 
     image_url = st.text_input(
@@ -237,15 +237,16 @@ if __name__ == "__main__":
             col2.error("YOLOv7 inference error")
 
         # Show request
-        code = f"""curl -X POST '{pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \
-        --header 'Content-Type: application/json' \
-        --data-raw '{{
-            "inputs": [
-                {{
-                    "image_url": "{image_url}"
-                }}
-            ]
-        }}' 
+        code = f"""
+curl -X POST '{pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \\
+--header 'Content-Type: application/json' \\
+--data-raw '{{
+    "inputs": [
+        {{
+            "image_url": "{image_url}"
+        }}
+    ]
+}}'
         """
         with st.expander(f"cURL"):
             st.code(code, language="bash")

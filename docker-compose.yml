@@ -379,11 +379,10 @@ services:
       context: ./streamlit/yolov4-vs-yolov7
     restart: unless-stopped
     environment:
-      - STREAMLIT_SERVER_BASEURLPATH=yolov4-vs-yolov7
       - STREAMLIT_SERVER_ENABLECORS=false
       - STREAMLIT_SERVER_HEADLESS=true
-      - STREAMLIT_SERVER_HEADLESS=8501
+      - STREAMLIT_SERVER_PORT=8501
     ports:
       - 18501:8501
     entrypoint: /usr/local/bin/streamlit
-    command: run main.py -- --pipeline-backend-base-url=https://demo.instill.tech --yolov4=v1alpha/pipelines/yolov4 --yolov7=v1alpha/pipelines/yolov7
+    command: run main.py --server.baseUrlPath yolov4-vs-yolov7 -- --pipeline-backend-base-url=https://demo.instill.tech --yolov4=pipelines/yolov4 --yolov7=pipelines/yolov7
