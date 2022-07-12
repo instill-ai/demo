@@ -7,6 +7,7 @@ import numpy as np
 import streamlit as st
 from types import SimpleNamespace
 from typing import List, Tuple
+from urllib.error import HTTPError
 
 from utils import draw_detection, gen_detection_table
 
@@ -135,7 +136,8 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     print(opt)
 
-    st.set_page_config(page_title="VDP - YOLOv4 vs. YOLOv7", page_icon="https://www.instill.tech/favicon-32x32.png", layout="centered", initial_sidebar_state="auto")
+    st.set_page_config(page_title="VDP - YOLOv4 vs. YOLOv7",
+                       page_icon="https://www.instill.tech/favicon-32x32.png", layout="centered", initial_sidebar_state="auto")
 
     pipeline_backend_base_url = opt.pipeline_backend_base_url + "/v1alpha"
 
@@ -169,81 +171,8 @@ if __name__ == "__main__":
     Let's trigger two pipelines with an input image each:
     
     """
-    image_url = st.text_input(
-        label="Feed me with an image URL and press ENTER", value="https://artifacts.instill.tech/dog.jpg")
 
-    req = urllib.request.Request(
-        image_url, headers={'User-Agent': "XYZ/3.0"})
-    con = urllib.request.urlopen(req, timeout=10)
-    arr = np.asarray(bytearray(con.read()), dtype=np.uint8)
-    img_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-
-    # Visualization
-    col1, col2, col3 = st.columns([0.2, 0.6, 0.2])
-    col2.image(
-        img,
-        use_column_width=True,
-        caption=f"Image source: {image_url}")
-
-    """
-    #### Results
-
-    Spot any difference?
-    """
-
-    col1, col2 = st.columns(2)
-
-    success1, resp1, boxes_ltwh1, categories1, scores1 = trigger_yolo_pipeline_w_remote_image(
-        pipeline_backend_base_url, opt.yolov4, image_url)
-
-    success2, resp2, boxes_ltwh2, categories2, scores2 = trigger_yolo_pipeline_w_remote_image(
-        pipeline_backend_base_url, opt.yolov7, image_url)
-
-    if success1:
-        # Show image overlaid with detection results
-        img_draw1 = draw_detection(img, boxes_ltwh1, categories1, scores1)
-        col1.image(
-            img_draw1, use_column_width=True,
-            caption=f"YOLOv4")
-    else:
-        col1.error("YOLOv4 inference error")
-
-    if success2:
-        # Show image overlaid with detection results
-        img_draw2 = draw_detection(img, boxes_ltwh2, categories2, scores2)
-        col2.image(
-            img_draw2, use_column_width=True,
-            caption=f"YOLOv7")
-    else:
-        col2.error("YOLOv7 inference error")
-
-    # Show request
-    code = f"""curl -X POST '{pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \
-    --header 'Content-Type: application/json' \
-    --data-raw '{{
-        "inputs": [
-            {{
-                "image_url": "{image_url}"
-            }}
-        ]
-    }}' 
-    """
-    with st.expander(f"cURL"):
-        st.code(code, language="bash")
-
-    col1, col2 = st.columns(2)
-    if success1:
-        # Show response
-        with col1.expander(f"POST /pipelines/{opt.yolov4}:trigger response"):
-            st.json(resp1)
-
-    if success2:
-        # Show response
-        with col2.expander(f"POST /pipelines/{opt.yolov7}:trigger response"):
-            st.json(resp2)
-
-    """
+    vdp_markdown = """
     # What's cool about VDP?
 
     A VDP pipeline unlocks the value of unstructured visual data:
@@ -257,23 +186,104 @@ if __name__ == "__main__":
     With the help of the VDP pipeline, you can start manipulating the structured data like below in the destination using the tooling in modern data stack.
     """
 
-    col1, col2 = st.columns(2)
-    if success1:
-        _, df1 = gen_detection_table(
-            boxes_ltwh1, categories1, scores1)
-        if len(df1):
-            col1.dataframe(df1.style.highlight_between(
-                subset='Score', left=0.5, right=1.0))
-        else:
-            col1.dataframe(df1)
+    image_url = st.text_input(
+        label="Feed me with an image URL and press ENTER", value="https://artifacts.instill.tech/dog.jpg")
 
-    if success2:
-        _, df2 = gen_detection_table(
-            boxes_ltwh2, categories2, scores2)
-        if len(df2):
-            col2.dataframe(df2.style.highlight_between(
-                subset='Score', left=0.5, right=1.0))
-        else:
-            col2.dataframe(df2)
+    try:
+        req = urllib.request.Request(
+            image_url, headers={'User-Agent': "XYZ/3.0"})
+        con = urllib.request.urlopen(req, timeout=10)
+        arr = np.asarray(bytearray(con.read()), dtype=np.uint8)
+        img_bgr = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
-    st.caption("Highlight detections with score >= 0.5")
+        # Visualization
+        col1, col2, col3 = st.columns([0.2, 0.6, 0.2])
+        col2.image(
+            img,
+            use_column_width=True,
+            caption=f"Image source: {image_url}")
+
+        """
+        #### Results
+
+        Spot any difference?
+        """
+
+        col1, col2 = st.columns(2)
+
+        success1, resp1, boxes_ltwh1, categories1, scores1 = trigger_yolo_pipeline_w_remote_image(
+            pipeline_backend_base_url, opt.yolov4, image_url)
+
+        success2, resp2, boxes_ltwh2, categories2, scores2 = trigger_yolo_pipeline_w_remote_image(
+            pipeline_backend_base_url, opt.yolov7, image_url)
+
+        if success1:
+            # Show image overlaid with detection results
+            img_draw1 = draw_detection(img, boxes_ltwh1, categories1, scores1)
+            col1.image(
+                img_draw1, use_column_width=True,
+                caption=f"YOLOv4")
+        else:
+            col1.error("YOLOv4 inference error")
+
+        if success2:
+            # Show image overlaid with detection results
+            img_draw2 = draw_detection(img, boxes_ltwh2, categories2, scores2)
+            col2.image(
+                img_draw2, use_column_width=True,
+                caption=f"YOLOv7")
+        else:
+            col2.error("YOLOv7 inference error")
+
+        # Show request
+        code = f"""curl -X POST '{pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \
+        --header 'Content-Type: application/json' \
+        --data-raw '{{
+            "inputs": [
+                {{
+                    "image_url": "{image_url}"
+                }}
+            ]
+        }}' 
+        """
+        with st.expander(f"cURL"):
+            st.code(code, language="bash")
+
+        col1, col2 = st.columns(2)
+        if success1:
+            # Show response
+            with col1.expander(f"POST /pipelines/{opt.yolov4}:trigger response"):
+                st.json(resp1)
+
+        if success2:
+            # Show response
+            with col2.expander(f"POST /pipelines/{opt.yolov7}:trigger response"):
+                st.json(resp2)
+
+        st.markdown(vdp_markdown)
+
+        col1, col2 = st.columns(2)
+        if success1:
+            _, df1 = gen_detection_table(
+                boxes_ltwh1, categories1, scores1)
+            if len(df1):
+                col1.dataframe(df1.style.highlight_between(
+                    subset='Score', left=0.5, right=1.0))
+            else:
+                col1.dataframe(df1)
+
+        if success2:
+            _, df2 = gen_detection_table(
+                boxes_ltwh2, categories2, scores2)
+            if len(df2):
+                col2.dataframe(df2.style.highlight_between(
+                    subset='Score', left=0.5, right=1.0))
+            else:
+                col2.dataframe(df2)
+
+        st.caption("Highlight detections with score >= 0.5")
+
+    except (ValueError, HTTPError) as err:
+        st.error("Can't read the image")
+        st.markdown(vdp_markdown)
