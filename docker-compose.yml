@@ -59,7 +59,7 @@ services:
       CFG_MODELBACKEND_PORT: 8083
       CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
       CFG_CACHE_REDIS_REDISOPTIONS_ADDR: demo-redis:6379
-      CFG_SERVER_CORSORIGINS: http://localhost:13000
+      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
     ports:
       - 18081:8081
     entrypoint: ./pipeline-backend
@@ -137,7 +137,7 @@ services:
       CFG_PIPELINEBACKEND_HOST: demo-pipeline-backend
       CFG_PIPELINEBACKEND_PORT: 8081
       CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
-      CFG_SERVER_CORSORIGINS: http://localhost:13000
+      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
     ports:
       - 18082:8082
     entrypoint: ./connector-backend
@@ -193,7 +193,7 @@ services:
       CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
       CFG_CACHE_REDIS_REDISOPTIONS_ADDR: demo-redis:6379
       CFG_TRITONSERVER_MODELSTORE: /model-repository
-      CFG_SERVER_CORSORIGINS: http://localhost:13000
+      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
     ports:
       - 18083:8083
     volumes:
@@ -246,7 +246,7 @@ services:
       CFG_DATABASE_PORT: 5432
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
-      CFG_SERVER_CORSORIGINS: http://localhost:13000
+      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
     ports:
       - 18084:8084
     entrypoint: ./mgmt-backend
@@ -301,12 +301,12 @@ services:
     image: temporalio/auto-setup:${TEMPORAL_VERSION}
     restart: unless-stopped
     environment:
-      - DB=postgresql
-      - DB_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PWD=password
-      - POSTGRES_SEEDS=demo-pg-sql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml
+      DB: postgresql
+      DB_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PWD: password
+      POSTGRES_SEEDS: demo-pg-sql
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development.yaml
     ports:
       - 17233:7233
     depends_on:
@@ -318,7 +318,7 @@ services:
     image: temporalio/admin-tools:${TEMPORAL_VERSION}
     restart: unless-stopped
     environment:
-      - TEMPORAL_CLI_ADDRESS=demo-temporal:7233
+      TEMPORAL_CLI_ADDRESS: demo-temporal:7233
     stdin_open: true
     tty: true
     depends_on:
@@ -329,7 +329,7 @@ services:
     image: temporalio/ui:${TEMPORAL_UI_VERSION}
     restart: unless-stopped
     environment:
-      - TEMPORAL_ADDRESS=demo-temporal:7233
+      TEMPORAL_ADDRESS: demo-temporal:7233
     ports:
       - 18088:8084
     depends_on:
@@ -340,7 +340,7 @@ services:
     image: ${REDIS_IMAGE_TAG}
     restart: unless-stopped
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes
+      ALLOW_EMPTY_PASSWORD: "true"
     ports:
       - 16379:6379
 
@@ -348,7 +348,7 @@ services:
     container_name: demo-redoc-openapi
     image: redocly/redoc:v2.0.0-rc.70
     environment:
-      - SPEC_URL=https://raw.githubusercontent.com/instill-ai/protobufs/main/openapiv2/openapiv2.swagger.yaml
+      SPEC_URL: https://raw.githubusercontent.com/instill-ai/protobufs/main/openapiv2/openapiv2.swagger.yaml
     ports:
       - 13001:80
 
@@ -357,13 +357,14 @@ services:
     image: instill/console:${CONSOLE_VERSION}
     restart: unless-stopped
     environment:
-      - API_VERSION=v1alpha
-      - DISABLE_USAGE_COLLECTION=false
-      - CONSOLE_DOMAIN=demo.instill.tech
-      - PIPELINE_API_ENDPOINT=https://demo.instill.tech
-      - CONNECTOR_API_ENDPOINT=https://demo.instill.tech
-      - MODEL_API_ENDPOINT=https://demo.instill.tech
-      - MGMT_API_ENDPOINT=https://demo.instill.tech
+      API_VERSION: v1alpha
+      DISABLE_USAGE_COLLECTION: "false"
+      CONSOLE_EDITION: local-ce:demo
+      CONSOLE_BASE_URL: demo.instill.tech
+      PIPELINE_BACKEND_BASE_URL: https://demo.instill.tech
+      CONNECTOR_BACKEND_BASE_URL: https://demo.instill.tech
+      MODEL_BACKEND_BASE_URL: https://demo.instill.tech
+      MGMT_BACKEND_BASE_URL: https://demo.instill.tech
     ports:
       - 13000:3000
     depends_on:
@@ -379,9 +380,9 @@ services:
       context: ./streamlit/yolov4-vs-yolov7
     restart: unless-stopped
     environment:
-      - STREAMLIT_SERVER_ENABLECORS=false
-      - STREAMLIT_SERVER_HEADLESS=true
-      - STREAMLIT_SERVER_PORT=8501
+      STREAMLIT_SERVER_ENABLECORS: "false"
+      STREAMLIT_SERVER_HEADLESS: "true"
+      STREAMLIT_SERVER_PORT: 8501
     ports:
       - 18501:8501
     entrypoint: /usr/local/bin/streamlit
