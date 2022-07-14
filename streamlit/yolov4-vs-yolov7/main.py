@@ -3,11 +3,13 @@ import requests
 import json
 import cv2
 import urllib
+import base64
 import numpy as np
 import streamlit as st
 from types import SimpleNamespace
 from typing import List, Tuple
 from urllib.error import HTTPError
+from urllib3.connection import ConnectionError
 
 from utils import draw_detection, gen_detection_table
 
@@ -123,6 +125,57 @@ def trigger_yolo_pipeline_w_remote_image(pipeline_backend_base_url: str, pipelin
     return True, resp.json(), boxes_ltwh, categories, scores
 
 
+def trigger_yolo_pipeline_w_base64_image(pipeline_backend_base_url: str, pipeline_name: str, base64_bytes: bytes):
+    """ Test a pipeline formatted with a detection model instance (e.g., YOLOv7) using remote image URL
+
+    Args:
+        pipeline_backend_base_url (string): VDP pipeline backend base URL
+        pipeline_name (string): pipeline resource name in the format `pipelines/{pipeline-id}`
+        base64_bytes (bytes): Base64 encoded image
+
+    Returns: a tuple of
+        bool: a flag to indicate whether the response is successful
+        json: response json object
+        List[Tuple[float]]: a list of detected bounding boxes in the format of (top, left, width, height)
+        List[str]: a list of category labels, each of which corresponds to a detected bounding box. The length of this list must be the same as the detected bounding boxes.
+        List[float]]: a list of scores, each of which corresponds to a detected bounding box. The length of this list must be the same as the detected bounding boxes.
+
+    """
+
+    base64_img = base64_bytes.decode("utf-8")
+
+    body = {
+        "inputs": [
+            {
+                'image_base64': base64_img
+            }
+        ]
+    }
+
+    resp = requests.post(
+        "{}/{}:trigger".format(pipeline_backend_base_url, pipeline_name), json=body)
+
+    if resp.status_code != 200:
+        return False, resp.json(), [], [], []
+
+    # Parse JSON into an object with attributes corresponding to dict keys.
+    r = json.loads(resp.text, object_hook=lambda d: SimpleNamespace(**d))
+
+    boxes_ltwh = []
+    categories = []
+    scores = []
+    for v in r.output[0].detection_outputs[0].bounding_box_objects:
+        boxes_ltwh.append((
+            v.bounding_box.left,
+            v.bounding_box.top,
+            v.bounding_box.width,
+            v.bounding_box.height))
+        categories.append(v.category)
+        scores.append(v.score)
+
+    return True, resp.json(), boxes_ltwh, categories, scores
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--demo-url', type=str,
@@ -159,17 +212,17 @@ if __name__ == "__main__":
 
     Give us a ⭐ on [![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/instill-ai/vdp) and join our [![Discord](https://img.shields.io/badge/Community-%237289DA.svg?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/sevxWsqpGh)
 
-    #### We are offering **FREE** fully-managed VDP on Instill Cloud
+    # We are offering **FREE** fully-managed VDP on Instill Cloud
     If you are interested in showcasing your models, please [sign up the form](https://www.instill.tech/get-access) and we will reach out to you. Seats are limited - first come , first served.
 
-    # Demo
+    # Remote image demo
 
     To spice things up, we use open-source [VDP](https://github.com/instill-ai/vdp) to import the official [YOLOv4](https://github.com/AlexeyAB/darknet) and [YOLOv7](https://github.com/WongKinYiu/yolov7) models pre-trained with only [MS-COCO](https://cocodataset.org) dataset. VDP instantly gives us the endpoints to perform inference:
-    1. https://demo.instill.tech/v1alpha/pipelines/yolov4:trigger        
-    2. https://demo.instill.tech/v1alpha/pipelines/yolov7:trigger        
-        
+    1. https://demo.instill.tech/v1alpha/pipelines/yolov4:trigger
+    2. https://demo.instill.tech/v1alpha/pipelines/yolov7:trigger
+
     Let's trigger two pipelines with an input image each:
-    
+
     """
 
     vdp_markdown = """
@@ -205,7 +258,7 @@ if __name__ == "__main__":
             caption=f"Image source: {image_url}")
 
         """
-        #### Results
+        # Results
 
         Spot any difference?
         """
@@ -285,6 +338,125 @@ curl -X POST '{pipeline_backend_base_url}/pipelines/<pipeline-id>:trigger' \\
 
         st.caption("Highlight detections with score >= 0.5")
 
-    except (ValueError, HTTPError) as err:
-        st.error("Can't read the image")
+    except:
+        st.error("Can't process the image")
         st.markdown(vdp_markdown)
+
+    # # File upload demo
+    """
+    # Drag and drop demo
+    """
+    enable_file_drop = st.checkbox('Enable file_drop demo')
+    if enable_file_drop:
+        try:
+            uploaded_file = st.file_uploader("Choose a file")
+            if uploaded_file is not None:
+                # To read file as bytes:
+                bytes_data = uploaded_file.getvalue()
+                # Show image
+                col1, col2, col3 = st.columns([0.2, 0.6, 0.2])
+                col2.image(
+                    bytes_data,
+                    use_column_width=True)
+
+                img_bgr = cv2.imdecode(np.frombuffer(
+                    bytes_data, np.uint8), cv2.IMREAD_COLOR)
+                img = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+                # Result Visualization
+                base64_bytes = base64.b64encode(bytes_data)
+                success1, resp1, boxes_ltwh1, categories1, scores1 = trigger_yolo_pipeline_w_base64_image(
+                    pipeline_backend_base_url, opt.yolov4, base64_bytes)
+
+                success2, resp2, boxes_ltwh2, categories2, scores2 = trigger_yolo_pipeline_w_base64_image(
+                    pipeline_backend_base_url, opt.yolov7, base64_bytes)
+
+                col1, col2 = st.columns(2)
+                if success1:
+                    # Show image overlaid with detection results
+                    img_draw1 = draw_detection(
+                        img, boxes_ltwh1, categories1, scores1)
+                    col1.image(
+                        img_draw1, use_column_width=True,
+                        caption=f"YOLOv4")
+                else:
+                    col1.error("YOLOv4 inference error")
+
+                if success2:
+                    # Show image overlaid with detection results
+                    img_draw2 = draw_detection(
+                        img, boxes_ltwh2, categories2, scores2)
+                    col2.image(
+                        img_draw2, use_column_width=True,
+                        caption=f"YOLOv7")
+                else:
+                    col2.error("YOLOv7 inference error")
+        except:
+            st.error("Can't process the image")
+
+    # Webcam demo
+    """
+    # Webcam live feed demo
+    """
+    enable_webcam = st.checkbox(
+        'Enable webcam live feed, and re-click to abort')
+    coll, colm, colr = st.columns([0.2, 0.6, 0.2])
+    FRAME_WINDOW = colm.image([])
+
+    col1, col2 = st.columns(2)
+    FRAME_WINDOW1 = col1.image([])
+    FRAME_WINDOW2 = col2.image([])
+    WIDTH = 320
+    cap = None
+
+    try:
+        if enable_webcam:
+            cap = cv2.VideoCapture(0)
+
+        while enable_webcam:
+            _, frame = cap.read()
+
+            # Resize
+            ori_h, ori_w, _ = frame.shape
+            height = int(WIDTH * ori_h / ori_w)
+            frame = cv2.resize(frame, (WIDTH, height))
+
+            img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            FRAME_WINDOW.image(img)
+
+            bytes_data = cv2.imencode('.jpg', frame)[1].tobytes()
+
+            # Result Visualization
+            base64_bytes = base64.b64encode(bytes_data)
+            success1, resp1, boxes_ltwh1, categories1, scores1 = trigger_yolo_pipeline_w_base64_image(
+                pipeline_backend_base_url, opt.yolov4, base64_bytes)
+
+            success2, resp2, boxes_ltwh2, categories2, scores2 = trigger_yolo_pipeline_w_base64_image(
+                pipeline_backend_base_url, opt.yolov7, base64_bytes)
+
+            if success1:
+                # Show image overlaid with detection results
+                img_draw1 = draw_detection(
+                    img, boxes_ltwh1, categories1, scores1)
+                FRAME_WINDOW1.image(
+                    img_draw1, use_column_width=True,
+                    caption=f"YOLOv4")
+            else:
+                col1.error("YOLOv4 inference error")
+
+            if success2:
+                # Show image overlaid with detection results
+                img_draw2 = draw_detection(
+                    img, boxes_ltwh2, categories2, scores2)
+                FRAME_WINDOW2.image(
+                    img_draw2, use_column_width=True,
+                    caption=f"YOLOv7")
+            else:
+                col2.error("YOLOv7 inference error")
+
+            if not enable_webcam:
+                break
+        if cap is not None:
+            cap.release()
+    except:
+        st.error("Can't process the image")
