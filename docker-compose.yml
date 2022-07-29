@@ -360,7 +360,7 @@ services:
       API_VERSION: v1alpha
       DISABLE_USAGE_COLLECTION: "false"
       CONSOLE_EDITION: local-ce:demo
-      CONSOLE_BASE_URL: demo.instill.tech
+      CONSOLE_BASE_URL: https://demo.instill.tech
       PIPELINE_BACKEND_BASE_URL: https://demo.instill.tech
       CONNECTOR_BACKEND_BASE_URL: https://demo.instill.tech
       MODEL_BACKEND_BASE_URL: https://demo.instill.tech
