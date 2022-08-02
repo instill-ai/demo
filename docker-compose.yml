@@ -116,8 +116,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: ./connector-backend-worker
     depends_on:
-      - connector_backend_init
-      - temporal
+      connector_backend_init:
+        condition: service_completed_successfully
+      temporal:
+        condition: service_healthy
 
   connector_backend:
     container_name: demo-connector-backend
@@ -237,8 +239,7 @@ services:
     container_name: demo-mgmt-backend
     image: instill/mgmt-backend:${MGMT_BACKEND_VERSION}
     restart: unless-stopped
-    environment:
-      CFG_SERVER_PORT: 8084
+    environment:      
       CFG_SERVER_DEBUG: "false"
       CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
       CFG_SERVER_EDITION: local-ce:demo
@@ -306,9 +307,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PWD: password
       POSTGRES_SEEDS: demo-pg-sql
-      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development.yaml
+      DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/docker.yaml
     ports:
       - 17233:7233
+    healthcheck:
+      test: ["CMD", "tctl", "--address", "temporal:7233", "workflow", "list"]
+      interval: 10s
+      timeout: 1m
+      retries: 10
     depends_on:
       pg_sql:
         condition: service_healthy
