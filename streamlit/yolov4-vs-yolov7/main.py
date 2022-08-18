@@ -46,7 +46,7 @@ def test_yolo_w_remote_image(model_backend_base_url: str, model_instance_name: s
     boxes_ltwh = []
     categories = []
     scores = []
-    for v in r.output.detection_outputs[0].bounding_box_objects:
+    for v in r.batch_outputs[0].detection.bounding_boxes:
         boxes_ltwh.append((
             v.bounding_box.left,
             v.bounding_box.top,
@@ -111,7 +111,7 @@ def trigger_yolo_pipeline_w_remote_image(pipeline_backend_base_url: str, pipelin
     boxes_ltwh = []
     categories = []
     scores = []
-    for v in r.output[0].detection_outputs[0].bounding_box_objects:
+    for v in r.model_instance_outputs[0].batch_outputs[0].detection.bounding_boxes:
         boxes_ltwh.append((
             v.bounding_box.left,
             v.bounding_box.top,
