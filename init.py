@@ -82,7 +82,7 @@ print()
 print("Deploy a YOLOv4 model instance:")
 print()
 deploy_model_inst = requests.post(
-    f'http://{backend["model"]}/{ver}/models/yolov4/instances/v1.0-gpu:deploy')
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
 
 print(deploy_model_inst.json())
 print()
@@ -108,7 +108,59 @@ print()
 print("Deploy a YOLOv7 model instance:")
 print()
 deploy_model_inst = requests.post(
-    f'http://{backend["model"]}/{ver}/models/yolov7/instances/v1.0-gpu:deploy')
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
+
+print(deploy_model_inst.json())
+print()
+
+print("Create a keypoint model:")
+print()
+model_id = "keypoint"
+model = requests.get(
+    f'http://{backend["model"]}/{ver}/models/{model_id}')
+if model.status_code == 404:
+    model = requests.post(f'http://{backend["model"]}/{ver}/models', json={
+        "id": model_id,
+        "model_definition": "model-definitions/github",
+        "description": "Keypoint model imported from GitHub",
+        "configuration": {
+            "repository": "instill-ai/model-keypoint-detection-dvc"
+        },
+    })
+
+print(model.json())
+print()
+
+print("Deploy a keypoint model instance:")
+print()
+deploy_model_inst = requests.post(
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
+
+print(deploy_model_inst.json())
+print()
+
+print("Create an OCR model:")
+print()
+model_id = "ocr"
+model = requests.get(
+    f'http://{backend["model"]}/{ver}/models/{model_id}')
+if model.status_code == 404:
+    model = requests.post(f'http://{backend["model"]}/{ver}/models', json={
+        "id": model_id,
+        "model_definition": "model-definitions/github",
+        "description": "OCR model imported from GitHub",
+        "configuration": {
+            "repository": "instill-ai/model-ocr-dvc"
+        },
+    })
+
+print(model.json())
+print()
+
+print("Deploy an OCR model instance:")
+print()
+deploy_model_inst = requests.post(
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
 
 print(deploy_model_inst.json())
 print()
@@ -122,6 +174,8 @@ print()
 pipeline_id: typing.Dict[str, str] = {
     "yolov4": "yolov4",
     "yolov7": "yolov7",
+    "keypoint": "keypoint",
+    "ocr": "ocr",
 }
 
 pipeline = requests.get(
@@ -129,7 +183,7 @@ pipeline = requests.get(
 if pipeline.status_code == 404:
     pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
         "id": pipeline_id["yolov4"],
-        "description": "A single model sync pipeline with YOLOv4",
+        "description": "A single model sync pipeline for YOLOv4 demo",
         "recipe": {
             "source": "source-connectors/source-http",
             "model_instances": ["models/yolov4/instances/v1.0-gpu"],
@@ -145,10 +199,42 @@ pipeline = requests.get(
 if pipeline.status_code == 404:
     pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
         "id": pipeline_id["yolov7"],
-        "description": "A single model sync pipeline with YOLOv7",
+        "description": "A single model sync pipeline for YOLOv7 demo",
         "recipe": {
             "source": "source-connectors/source-http",
             "model_instances": ["models/yolov7/instances/v1.0-gpu"],
+            "destination": f'destination-connectors/destination-http'
+        }
+    })
+
+print(pipeline.json())
+print()
+
+pipeline = requests.get(
+    f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["keypoint"]}')
+if pipeline.status_code == 404:
+    pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
+        "id": pipeline_id["yolov7"],
+        "description": "A single model sync pipeline for keypoint demo",
+        "recipe": {
+            "source": "source-connectors/source-http",
+            "model_instances": ["models/keypoint/instances/v1.0-gpu"],
+            "destination": f'destination-connectors/destination-http'
+        }
+    })
+
+print(pipeline.json())
+print()
+
+pipeline = requests.get(
+    f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["ocr"]}')
+if pipeline.status_code == 404:
+    pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
+        "id": pipeline_id["yolov7"],
+        "description": "A single model sync pipeline for keypoint demo",
+        "recipe": {
+            "source": "source-connectors/source-http",
+            "model_instances": ["models/ocr/instances/v1.0-gpu"],
             "destination": f'destination-connectors/destination-http'
         }
     })

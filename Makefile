@@ -24,7 +24,7 @@ endif
 all:			## Launch all services with their up-to-date release version
 	@docker inspect --type=image ${TRITONSERVER_IMAGE_TAG} >/dev/null 2>&1 || printf "\033[1;33mWARNING:\033[0m This may take a while due to the enormous size of the Triton server image, but the image pulling process should be just a one-time effort.\n" && sleep 5
 	@docker-compose up -d
-	@python3 streamlit/yolov4-vs-yolov7/init.py
+	@python3 init.py
 
 .PHONY: logs
 logs:			## Tail all logs with -n 10
