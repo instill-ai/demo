@@ -2,35 +2,26 @@ version: "3.9"
 
 networks:
   default:
-    name: demo-instill-network
+    name: instill-network
 
 volumes:
-  demo_vdp:
-    name: demo-vdp
-  demo_airbyte:
-    name: demo-airbyte
-  demo_conda_pack:
-    name: demo-conda-pack
-  demo_model_repository:
-    name: demo-model-repository
+  vdp:
+    name: vdp
+  airbyte:
+    name: airbyte
+  conda_pack:
+    name: conda-pack
+  model_repository:
+    name: model-repository
 
 services:
-  nginx:
-    container_name: nginx
-    image: nginx:stable-alpine
-    restart: unless-stopped
-    ports:
-      - 18080:8080
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-
   pipeline_backend_migrate:
-    container_name: demo-pipeline-backend-migrate
+    container_name: ${PIPELINE_BACKEND_HOST}-migrate
     image: instill/pipeline-backend:${PIPELINE_BACKEND_VERSION}
     restart: on-failure
     environment:
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
     entrypoint: ./pipeline-backend-migrate
@@ -39,7 +30,7 @@ services:
         condition: service_healthy
 
   pipeline_backend:
-    container_name: demo-pipeline-backend
+    container_name: ${PIPELINE_BACKEND_HOST}
     image: instill/pipeline-backend:${PIPELINE_BACKEND_VERSION}
     restart: unless-stopped
     environment:
@@ -47,37 +38,34 @@ services:
       CFG_SERVER_DEBUG: "false"
       CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
       CFG_SERVER_EDITION: local-ce:demo
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
-      CFG_MGMTBACKEND_HOST: demo-mgmt-backend
-      CFG_MGMTBACKEND_PORT: 8084
-      CFG_CONNECTORBACKEND_HOST: demo-connector-backend
-      CFG_CONNECTORBACKEND_PORT: 8082
-      CFG_MODELBACKEND_HOST: demo-model-backend
-      CFG_MODELBACKEND_PORT: 8083
-      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
-      CFG_CACHE_REDIS_REDISOPTIONS_ADDR: demo-redis:6379
-      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
+      CFG_MGMTBACKEND_HOST: ${MGMT_BACKEND_HOST}
+      CFG_MGMTBACKEND_PORT: ${MGMT_BACKEND_PORT}
+      CFG_CONNECTORBACKEND_HOST: ${CONNECTOR_BACKEND_HOST}
+      CFG_CONNECTORBACKEND_PORT: ${CONNECTOR_BACKEND_PORT}
+      CFG_MODELBACKEND_HOST: ${MODEL_BACKEND_HOST}
+      CFG_MODELBACKEND_PORT: ${MODEL_BACKEND_PORT}
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
+      CFG_CACHE_REDIS_REDISOPTIONS_ADDR: ${REDIS_HOST}:${REDIS_PORT}
+      CFG_SERVER_CORSORIGINS: https://demo.instill.tech
     ports:
-      - 18081:8081
+      - ${PIPELINE_BACKEND_PORT}:8081
     entrypoint: ./pipeline-backend
     depends_on:
       - pipeline_backend_migrate
-      - mgmt_backend
-      - connector_backend
-      - model_backend
       - temporal
       - redis
 
   connector_backend_migrate:
-    container_name: demo-connector-backend-migrate
+    container_name: ${CONNECTOR_BACKEND_HOST}-migrate
     image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
     restart: on-failure
     environment:
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
     entrypoint: ./connector-backend-migrate
@@ -86,12 +74,12 @@ services:
         condition: service_healthy
 
   connector_backend_init:
-    container_name: demo-connector-backend-init
+    container_name: ${CONNECTOR_BACKEND_HOST}-init
     image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
     restart: on-failure
     environment:
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
     entrypoint: ./connector-backend-init
@@ -99,20 +87,20 @@ services:
       - connector_backend_migrate
 
   connector_backend_worker:
-    container_name: demo-connector-backend-worker
+    container_name: ${CONNECTOR_BACKEND_HOST}-worker
     image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
     restart: unless-stopped
     environment:
-      CFG_WORKER_MOUNTSOURCE_VDP: demo-vdp
-      CFG_WORKER_MOUNTSOURCE_AIRBYTE: demo-airbyte
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_WORKER_MOUNTSOURCE_VDP: vdp
+      CFG_WORKER_MOUNTSOURCE_AIRBYTE: airbyte
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
-      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
     volumes:
-      - demo_vdp:/vdp
-      - demo_airbyte:/airbyte
+      - vdp:/vdp
+      - airbyte:/airbyte
       - /var/run/docker.sock:/var/run/docker.sock
     entrypoint: ./connector-backend-worker
     depends_on:
@@ -122,7 +110,7 @@ services:
         condition: service_healthy
 
   connector_backend:
-    container_name: demo-connector-backend
+    container_name: ${CONNECTOR_BACKEND_HOST}
     image: instill/connector-backend:${CONNECTOR_BACKEND_VERSION}
     restart: unless-stopped
     environment:
@@ -130,30 +118,29 @@ services:
       CFG_SERVER_DEBUG: "false"
       CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
       CFG_SERVER_EDITION: local-ce:demo
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
-      CFG_MGMTBACKEND_HOST: demo-mgmt-backend
-      CFG_MGMTBACKEND_PORT: 8084
-      CFG_PIPELINEBACKEND_HOST: demo-pipeline-backend
-      CFG_PIPELINEBACKEND_PORT: 8081
-      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
-      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
+      CFG_MGMTBACKEND_HOST: ${MGMT_BACKEND_HOST}
+      CFG_MGMTBACKEND_PORT: ${MGMT_BACKEND_PORT}
+      CFG_PIPELINEBACKEND_HOST: ${PIPELINE_BACKEND_HOST}
+      CFG_PIPELINEBACKEND_PORT: ${PIPELINE_BACKEND_PORT}
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
+      CFG_SERVER_CORSORIGINS: https://demo.instill.tech
     ports:
-      - 18082:8082
+      - ${CONNECTOR_BACKEND_PORT}:8082
     entrypoint: ./connector-backend
     depends_on:
       - connector_backend_worker
-      - mgmt_backend
 
   model_backend_migrate:
-    container_name: demo-model-backend-migrate
+    container_name: ${MODEL_BACKEND_HOST}-migrate
     image: instill/model-backend:${MODEL_BACKEND_VERSION}
     restart: on-failure
     environment:
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
     entrypoint: ./model-backend-migrate
@@ -162,12 +149,12 @@ services:
         condition: service_healthy
 
   model_backend_init:
-    container_name: demo-model-backend-init
+    container_name: ${MODEL_BACKEND_HOST}-init
     image: instill/model-backend:${MODEL_BACKEND_VERSION}
     restart: on-failure
     environment:
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
     entrypoint: ./model-backend-init
@@ -175,7 +162,7 @@ services:
       - model_backend_migrate
 
   model_backend:
-    container_name: demo-model-backend
+    container_name: ${MODEL_BACKEND_HOST}
     image: instill/model-backend:${MODEL_BACKEND_VERSION}
     restart: unless-stopped
     environment:
@@ -183,23 +170,23 @@ services:
       CFG_SERVER_DEBUG: "false"
       CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
       CFG_SERVER_EDITION: local-ce:demo
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
-      CFG_MGMTBACKEND_HOST: demo-mgmt-backend
-      CFG_MGMTBACKEND_PORT: 8084
-      CFG_PIPELINEBACKEND_HOST: demo-pipeline-backend
-      CFG_PIPELINEBACKEND_PORT: 8081
-      CFG_TRITONSERVER_GRPCURI: demo-triton-server:8001
-      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: demo-temporal:7233
-      CFG_CACHE_REDIS_REDISOPTIONS_ADDR: demo-redis:6379
+      CFG_MGMTBACKEND_HOST: ${MGMT_BACKEND_HOST}
+      CFG_MGMTBACKEND_PORT: ${MGMT_BACKEND_PORT}
+      CFG_PIPELINEBACKEND_HOST: ${PIPELINE_BACKEND_HOST}
+      CFG_PIPELINEBACKEND_PORT: ${PIPELINE_BACKEND_PORT}
+      CFG_TRITONSERVER_GRPCURI: ${TRITON_SERVER_HOST}:${TRITON_SERVER_PORT}
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
+      CFG_CACHE_REDIS_REDISOPTIONS_ADDR: ${REDIS_HOST}:${REDIS_PORT}
       CFG_TRITONSERVER_MODELSTORE: /model-repository
-      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
+      CFG_SERVER_CORSORIGINS: https://demo.instill.tech
     ports:
-      - 18083:8083
+      - ${MODEL_BACKEND_PORT}:8083
     volumes:
-      - demo_model_repository:/model-repository
+      - model_repository:/model-repository
     entrypoint: ./model-backend
     depends_on:
       triton_server:
@@ -208,27 +195,26 @@ services:
         condition: service_completed_successfully
 
   mgmt_backend_migrate:
-    container_name: demo-mgmt-backend-migrate
+    container_name: ${MGMT_BACKEND_HOST}-migrate
     image: instill/mgmt-backend:${MGMT_BACKEND_VERSION}
     restart: on-failure
     environment:
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
     entrypoint: ./mgmt-backend-migrate
     depends_on:
       pg_sql:
         condition: service_healthy
 
   mgmt_backend_init:
-    container_name: demo-mgmt-backend-init
+    container_name: mgmt-backend-init
     image: instill/mgmt-backend:${MGMT_BACKEND_VERSION}
     restart: on-failure
     environment:
-      CFG_SERVER_PORT: 8084
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
     entrypoint: ./mgmt-backend-init
@@ -236,43 +222,48 @@ services:
       - mgmt_backend_migrate
 
   mgmt_backend:
-    container_name: demo-mgmt-backend
+    container_name: ${MGMT_BACKEND_HOST}
     image: instill/mgmt-backend:${MGMT_BACKEND_VERSION}
     restart: unless-stopped
-    environment:      
+    environment:
       CFG_SERVER_DEBUG: "false"
       CFG_SERVER_DISABLEUSAGE: ${DISABLEUSAGE}
       CFG_SERVER_EDITION: local-ce:demo
-      CFG_DATABASE_HOST: demo-pg-sql
-      CFG_DATABASE_PORT: 5432
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
       CFG_DATABASE_USERNAME: postgres
       CFG_DATABASE_PASSWORD: password
-      CFG_SERVER_CORSORIGINS: http://demo.instill.tech
+      CFG_SERVER_CORSORIGINS: https://demo.instill.tech
     ports:
-      - 18084:8084
+      - ${MGMT_BACKEND_PORT}:8084
     entrypoint: ./mgmt-backend
     depends_on:
       - mgmt_backend_init
 
   triton_conda_env:
-    container_name: demo-triton-conda-env
+    container_name: triton-conda-env
     image: ${TRITONCONDAENV_IMAGE_TAG}
     volumes:
-      - demo_conda_pack:/conda-pack
+      - conda_pack:/conda-pack
 
   triton_server:
-    runtime: ${TRITONSERVER_RUNTIME:-}
-    container_name: demo-triton-server
+    container_name: ${TRITON_SERVER_HOST}
     image: ${TRITONSERVER_IMAGE_TAG}
     restart: unless-stopped
     environment:
-      NVIDIA_VISIBLE_DEVICES: 1,2,3
+      NVIDIA_VISIBLE_DEVICES: 0
     command: tritonserver --model-store=/model-repository --model-control-mode=explicit --allow-http=true --strict-model-config=false
     ports:
-      - 18001:8001
+      - ${TRITON_SERVER_PORT}:8001
     volumes:
-      - demo_model_repository:/model-repository
-      - demo_conda_pack:/conda-pack
+      - model_repository:/model-repository
+      - conda_pack:/conda-pack
+      - /var/lib/nvidia/lib64:/usr/local/nvidia/lib64
+      - /var/lib/nvidia/bin:/usr/local/nvidia/bin
+    devices:
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidia-uvm:/dev/nvidia-uvm
+      - /dev/nvidiactl:/dev/nvidiactl
     healthcheck:
       test: ["CMD-SHELL", "curl localhost:8000/v2/health/ready"]
       timeout: 20s
@@ -285,11 +276,11 @@ services:
       - triton_conda_env
 
   pg_sql:
-    container_name: demo-pg-sql
+    container_name: ${POSTGRESQL_HOST}
     image: postgres:${POSTGRESQL_VERSION}-alpine
     restart: unless-stopped
     ports:
-      - 15432:5432
+      - ${POSTGRESQL_PORT}:5432
     environment:
       POSTGRES_PASSWORD: password
     healthcheck:
@@ -298,18 +289,18 @@ services:
       retries: 10
 
   temporal:
-    container_name: demo-temporal
+    container_name: temporal
     image: temporalio/auto-setup:${TEMPORAL_VERSION}
     restart: unless-stopped
     environment:
       DB: postgresql
-      DB_PORT: 5432
+      DB_PORT: ${POSTGRESQL_PORT}
       POSTGRES_USER: postgres
       POSTGRES_PWD: password
-      POSTGRES_SEEDS: demo-pg-sql
+      POSTGRES_SEEDS: ${POSTGRESQL_HOST}
       DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/docker.yaml
     ports:
-      - 17233:7233
+      - ${TEMPORAL_PORT}:7233
     healthcheck:
       test: ["CMD", "tctl", "--address", "temporal:7233", "workflow", "list"]
       interval: 10s
@@ -320,46 +311,46 @@ services:
         condition: service_healthy
 
   temporal_admin_tools:
-    container_name: demo-temporal-admin-tools
+    container_name: ${TEMPORAL_HOST}-admin-tools
     image: temporalio/admin-tools:${TEMPORAL_VERSION}
     restart: unless-stopped
     environment:
-      TEMPORAL_CLI_ADDRESS: demo-temporal:7233
+      TEMPORAL_CLI_ADDRESS: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
     stdin_open: true
     tty: true
     depends_on:
       - temporal
 
   temporal_ui:
-    container_name: demo-temporal-ui
+    container_name: ${TEMPORAL_UI_HOST}
     image: temporalio/ui:${TEMPORAL_UI_VERSION}
     restart: unless-stopped
     environment:
-      TEMPORAL_ADDRESS: demo-temporal:7233
+      TEMPORAL_ADDRESS: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
     ports:
-      - 18088:8084
+      - ${TEMPORAL_UI_PORT}:8080
     depends_on:
       - temporal
 
   redis:
-    container_name: demo-redis
+    container_name: redis
     image: ${REDIS_IMAGE_TAG}
     restart: unless-stopped
     environment:
       ALLOW_EMPTY_PASSWORD: "true"
     ports:
-      - 16379:6379
+      - ${REDIS_PORT}:6379
 
   redoc_openapi:
-    container_name: demo-redoc-openapi
-    image: redocly/redoc:v2.0.0-rc.70
+    container_name: redoc-openapi
+    image: redocly/redoc:${REDOC_OPENAPI_VERSION}
     environment:
-      SPEC_URL: https://raw.githubusercontent.com/instill-ai/protobufs/main/openapiv2/openapiv2.swagger.yaml
+      - SPEC_URL=https://raw.githubusercontent.com/instill-ai/protobufs/main/openapiv2/openapiv2.swagger.yaml
     ports:
-      - 13001:80
+      - ${REDOC_OPENAPI_PORT}:80
 
   console:
-    container_name: demo-console
+    container_name: ${CONSOLE_HOST}
     image: instill/console:${CONSOLE_VERSION}
     restart: unless-stopped
     environment:
@@ -372,24 +363,34 @@ services:
       MODEL_BACKEND_BASE_URL: https://demo.instill.tech
       MGMT_BACKEND_BASE_URL: https://demo.instill.tech
     ports:
-      - 13000:3000
+      - ${CONSOLE_PORT}:3000
     depends_on:
       - mgmt_backend
       - connector_backend
       - model_backend
       - pipeline_backend
 
-  yolov4_vs_yolov7:
-    container_name: demo-yolov4-vs-yolov7
-    image: instill/yolov4-vs-yolov7:latest
-    build:
-      context: ./streamlit/yolov4-vs-yolov7
+  nginx:
+    container_name: nginx
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - 443:443
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/ssl/cloudflare.pem:/etc/ssl/cloudflare.pem
+      - /etc/ssl/cloudflare.key:/etc/ssl/cloudflare.key
+
+  streamlit_yolov7:
+    container_name: yolov4-vs-yolov7
+    image: instill/streamlit-yolov7:latest
     restart: unless-stopped
     environment:
       STREAMLIT_SERVER_ENABLECORS: "false"
       STREAMLIT_SERVER_HEADLESS: "true"
       STREAMLIT_SERVER_PORT: 8501
+      STREAMLIT_SERVER_BASE_URL_PATH: yolov4-vs-yolov7
     ports:
-      - 18501:8501
+      - 8501:8501
     entrypoint: /usr/local/bin/streamlit
-    command: run main.py --server.baseUrlPath yolov4-vs-yolov7 -- --pipeline-backend-base-url=https://demo.instill.tech --yolov4=pipelines/yolov4 --yolov7=pipelines/yolov7
+    command: run main.py -- --demo-url=https://demo.instill.tech/yolov4-vs-yolov7 --pipeline-backend-base-url=https://demo.instill.tech --yolov4=yolov4 --yolov7=yolov7

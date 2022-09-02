@@ -1,5 +1,4 @@
 import typing
-from typing import Final
 
 import requests
 
@@ -8,11 +7,11 @@ import requests
 ###############################################################################
 
 # TODO: replace with future api-gateway
-ver: Final[str] = "v1alpha"
+ver = "v1alpha"
 backend: typing.Dict[str, str] = {
-    "pipeline": "localhost:18081",
-    "connector": "localhost:18082",
-    "model": "localhost:18083",
+    "pipeline": "localhost:8081",
+    "connector": "localhost:8082",
+    "model": "localhost:8083",
 }
 
 ###############################################################################
@@ -72,7 +71,7 @@ if model.status_code == 404:
         "model_definition": "model-definitions/github",
         "description": "YOLOv4 model imported from GitHub",
         "configuration": {
-            "repository": "instill-ai/model-yolov4"
+            "repository": "instill-ai/model-yolov4-dvc"
         },
     })
 
@@ -98,7 +97,7 @@ if model.status_code == 404:
         "model_definition": "model-definitions/github",
         "description": "YOLOv7 model imported from GitHub",
         "configuration": {
-            "repository": "instill-ai/model-yolov7"
+            "repository": "instill-ai/model-yolov7-dvc"
         },
     })
 
@@ -214,7 +213,7 @@ pipeline = requests.get(
     f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["keypoint"]}')
 if pipeline.status_code == 404:
     pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
-        "id": pipeline_id["yolov7"],
+        "id": pipeline_id["keypoint"],
         "description": "A single model sync pipeline for keypoint demo",
         "recipe": {
             "source": "source-connectors/source-http",
@@ -230,8 +229,8 @@ pipeline = requests.get(
     f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["ocr"]}')
 if pipeline.status_code == 404:
     pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
-        "id": pipeline_id["yolov7"],
-        "description": "A single model sync pipeline for keypoint demo",
+        "id": pipeline_id["ocr"],
+        "description": "A single model sync pipeline for OCR demo",
         "recipe": {
             "source": "source-connectors/source-http",
             "model_instances": ["models/ocr/instances/v1.0-gpu"],
