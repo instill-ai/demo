@@ -81,7 +81,7 @@ print()
 print("Deploy a YOLOv4 model instance:")
 print()
 deploy_model_inst = requests.post(
-    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu/deploy')
 
 print(deploy_model_inst.json())
 print()
@@ -107,7 +107,7 @@ print()
 print("Deploy a YOLOv7 model instance:")
 print()
 deploy_model_inst = requests.post(
-    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu/deploy')
 
 print(deploy_model_inst.json())
 print()
@@ -133,7 +133,7 @@ print()
 print("Deploy a keypoint model instance:")
 print()
 deploy_model_inst = requests.post(
-    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu/deploy')
 
 print(deploy_model_inst.json())
 print()
@@ -159,7 +159,7 @@ print()
 print("Deploy an OCR model instance:")
 print()
 deploy_model_inst = requests.post(
-    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu:deploy')
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu/deploy')
 
 print(deploy_model_inst.json())
 print()
