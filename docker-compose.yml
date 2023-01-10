@@ -161,6 +161,28 @@ services:
     depends_on:
       - model_backend_migrate
 
+  model_backend_worker:
+    container_name: ${MODEL_BACKEND_HOST}-worker
+    image: instill/${MODEL_BACKEND_HOST}:${MODEL_BACKEND_VERSION}
+    restart: unless-stopped
+    environment:
+      CFG_SERVER_DEBUG: "false"
+      CFG_SERVER_ITMODE: ${ITMODE}
+      CFG_DATABASE_HOST: ${POSTGRESQL_HOST}
+      CFG_DATABASE_PORT: ${POSTGRESQL_PORT}
+      CFG_DATABASE_USERNAME: postgres
+      CFG_DATABASE_PASSWORD: password
+      CFG_TEMPORAL_CLIENTOPTIONS_HOSTPORT: ${TEMPORAL_HOST}:${TEMPORAL_PORT}
+      CFG_CACHE_REDIS_REDISOPTIONS_ADDR: ${REDIS_HOST}:${REDIS_PORT}
+      CFG_SERVER_CORSORIGINS: http://${DOMAIN:-localhost}:${CONSOLE_PORT}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - model_repository:/model-repository
+    entrypoint: ./model-backend-worker
+    depends_on:
+      - model_backend_init
+      - temporal_admin_tools
+
   model_backend:
     container_name: ${MODEL_BACKEND_HOST}
     image: instill/model-backend:${MODEL_BACKEND_VERSION}
