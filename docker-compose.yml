@@ -404,6 +404,7 @@ services:
   streamlit_yolov7:
     container_name: yolov4-vs-yolov7
     image: instill/streamlit-yolov7:latest
+    pull_policy: always
     restart: unless-stopped
     environment:
       STREAMLIT_SERVER_ENABLECORS: "false"
