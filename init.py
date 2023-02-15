@@ -1,6 +1,7 @@
 import typing
 
 import requests
+import time
 
 ###############################################################################
 # VDP backends
@@ -9,9 +10,9 @@ import requests
 # TODO: replace with future api-gateway
 ver = "v1alpha"
 backend: typing.Dict[str, str] = {
-    "pipeline": "localhost:8081",
-    "connector": "localhost:8082",
-    "model": "localhost:8083",
+    "pipeline": "localhost:8080",
+    "connector": "localhost:8080",
+    "model": "localhost:8080",
 }
 
 ###############################################################################
@@ -78,6 +79,8 @@ if model.status_code == 404:
 print(model.json())
 print()
 
+time.sleep(5)
+
 print("Deploy a YOLOv4 model instance:")
 print()
 deploy_model_inst = requests.post(
@@ -104,6 +107,8 @@ if model.status_code == 404:
 print(model.json())
 print()
 
+time.sleep(5)
+
 print("Deploy a YOLOv7 model instance:")
 print()
 deploy_model_inst = requests.post(
@@ -112,28 +117,58 @@ deploy_model_inst = requests.post(
 print(deploy_model_inst.json())
 print()
 
-print("Create a keypoint model:")
+print("Create an Intsance Segmentation model:")
 print()
-model_id = "keypoint"
+model_id = "instance-segmentation"
 model = requests.get(
     f'http://{backend["model"]}/{ver}/models/{model_id}')
 if model.status_code == 404:
     model = requests.post(f'http://{backend["model"]}/{ver}/models', json={
         "id": model_id,
         "model_definition": "model-definitions/github",
-        "description": "Keypoint model imported from GitHub",
+        "description": "Instance Segmentation model imported from GitHub",
         "configuration": {
-            "repository": "instill-ai/model-keypoint-detection-dvc"
+            "repository": "instill-ai/model-instance-segmentation-dvc"
         },
     })
 
 print(model.json())
 print()
 
-print("Deploy a keypoint model instance:")
+time.sleep(5)
+
+print("Deploy an Instance Segmentation model instance:")
 print()
 deploy_model_inst = requests.post(
     f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu/deploy')
+
+print(deploy_model_inst.json())
+print()
+
+print("Create an Stomata Instance Segmentation model:")
+print()
+model_id = "stomata-instance-segmentation"
+model = requests.get(
+    f'http://{backend["model"]}/{ver}/models/{model_id}')
+if model.status_code == 404:
+    model = requests.post(f'http://{backend["model"]}/{ver}/models', json={
+        "id": model_id,
+        "model_definition": "model-definitions/github",
+        "description": "Stomata Instance Segmentation model imported from GitHub",
+        "configuration": {
+            "repository": "instill-ai/model-stomata-instance-segmentation-dvc"
+        },
+    })
+
+print(model.json())
+print()
+
+time.sleep(5)
+
+print("Deploy an Stomata Instance Segmentation model instance:")
+print()
+deploy_model_inst = requests.post(
+    f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v2.0-gpu/deploy')
 
 print(deploy_model_inst.json())
 print()
@@ -156,6 +191,8 @@ if model.status_code == 404:
 print(model.json())
 print()
 
+time.sleep(5)
+
 print("Deploy an OCR model instance:")
 print()
 deploy_model_inst = requests.post(
@@ -163,6 +200,34 @@ deploy_model_inst = requests.post(
 
 print(deploy_model_inst.json())
 print()
+
+# print("Create a keypoint model:")
+# print()
+# model_id = "keypoint"
+# model = requests.get(
+#     f'http://{backend["model"]}/{ver}/models/{model_id}')
+# if model.status_code == 404:
+#     model = requests.post(f'http://{backend["model"]}/{ver}/models', json={
+#         "id": model_id,
+#         "model_definition": "model-definitions/github",
+#         "description": "Keypoint model imported from GitHub",
+#         "configuration": {
+#             "repository": "instill-ai/model-keypoint-detection-dvc"
+#         },
+#     })
+
+# print(model.json())
+# print()
+
+# time.sleep(5)
+
+# print("Deploy a keypoint model instance:")
+# print()
+# deploy_model_inst = requests.post(
+#     f'http://{backend["model"]}/{ver}/models/{model_id}/instances/v1.0-gpu/deploy')
+
+# print(deploy_model_inst.json())
+# print()
 
 ###############################################################################
 # Pipeline
@@ -175,6 +240,8 @@ pipeline_id: typing.Dict[str, str] = {
     "yolov7": "yolov7",
     "keypoint": "keypoint",
     "ocr": "ocr",
+    "instance_segmentation": "instance-segmentation",
+    "stomata": "stomata",
 }
 
 pipeline = requests.get(
@@ -210,14 +277,30 @@ print(pipeline.json())
 print()
 
 pipeline = requests.get(
-    f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["keypoint"]}')
+    f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["instance_segmentation"]}')
 if pipeline.status_code == 404:
     pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
-        "id": pipeline_id["keypoint"],
-        "description": "A single model sync pipeline for keypoint demo",
+        "id": pipeline_id["instance_segmentation"],
+        "description": "A single model sync pipeline for Instance Segmentation demo",
         "recipe": {
             "source": "source-connectors/source-http",
-            "model_instances": ["models/keypoint/instances/v1.0-gpu"],
+            "model_instances": ["models/instance-segmentation/instances/v1.0-gpu"],
+            "destination": f'destination-connectors/destination-http'
+        }
+    })
+
+print(pipeline.json())
+print()
+
+pipeline = requests.get(
+    f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["stomata"]}')
+if pipeline.status_code == 404:
+    pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
+        "id": pipeline_id["stomata"],
+        "description": "A single model sync pipeline for Stomata Instance Segmentation demo",
+        "recipe": {
+            "source": "source-connectors/source-http",
+            "model_instances": ["models/stomata-instance-segmentation/instances/v2.0-gpu"],
             "destination": f'destination-connectors/destination-http'
         }
     })
@@ -240,3 +323,19 @@ if pipeline.status_code == 404:
 
 print(pipeline.json())
 print()
+
+# pipeline = requests.get(
+#     f'http://{backend["pipeline"]}/{ver}/pipelines/{pipeline_id["keypoint"]}')
+# if pipeline.status_code == 404:
+#     pipeline = requests.post(f'http://{backend["pipeline"]}/{ver}/pipelines', json={
+#         "id": pipeline_id["keypoint"],
+#         "description": "A single model sync pipeline for keypoint demo",
+#         "recipe": {
+#             "source": "source-connectors/source-http",
+#             "model_instances": ["models/keypoint/instances/v1.0-gpu"],
+#             "destination": f'destination-connectors/destination-http'
+#         }
+#     })
+
+# print(pipeline.json())
+# print()
