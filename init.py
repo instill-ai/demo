@@ -43,6 +43,7 @@ def deploy_model_instance(model_id, model_instance_id):
 
 def create_sync_http_pipeline(pipeline_id, model_instance_name, description=""):
     print("Create a pipeline: {}".format(pipeline_id))
+    print()
     pipeline = requests.get(
         f'http://{api_backend}/{ver}/pipelines/{pipeline_id}')
     if pipeline.status_code == 404:
@@ -52,7 +53,7 @@ def create_sync_http_pipeline(pipeline_id, model_instance_name, description=""):
             "recipe": {
                 "source": "source-connectors/source-http",
                 "model_instances": [model_instance_name],
-                "destination": f'destination-connectors/destination-http'
+                "destination": "destination-connectors/destination-http"
             }
         })
     else:
@@ -184,7 +185,7 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
             "pipeline_description": "A single model sync pipeline for Stomata Instance Segmentation demo with custom trained Mask RCNN model"
         }
     ],
-    "Sementic Segmentation": [
+    "Semantic Segmentation": [
         {
             "model_id": "semantic-segmentation",
             "repository": "instill-ai/model-semantic-segmentation-dvc",
