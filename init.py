@@ -226,6 +226,6 @@ for task, item_ls in github.items():
         time.sleep(5)
         deploy_model_instance(model_id, model_instance_id)
         time.sleep(5)
-        model_instance_name = "models/{model_id}/instances/{model_instance_id}"
+        model_instance_name = f"models/{model_id}/instances/{model_instance_id}"
         create_sync_http_pipeline(
             item["pipeline_id"], model_instance_name, item["pipeline_description"])
