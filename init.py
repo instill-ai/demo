@@ -10,11 +10,6 @@ import time
 
 # TODO: replace with future api-gateway
 ver = "v1alpha"
-backend: typing.Dict[str, str] = {
-    "pipeline": "localhost:8080",
-    "connector": "localhost:8080",
-    "model": "localhost:8080",
-}
 api_backend = "localhost:8080"
 
 
