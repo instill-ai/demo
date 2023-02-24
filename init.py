@@ -141,14 +141,6 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
     ],
     "Keypoint Detection": [
         {
-            "model_id": "keypoint",
-            "repository": "instill-ai/model-keypoint-detection-dvc",
-            "model_description": "Detectron2 R-CNN R50-FPN Keypoint model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
-            "pipeline_id": "keypoint",
-            "pipeline_description": "A single model sync pipeline for Keypoint Detection demo with R-CNN R50-FPN model from Detectron2"
-        },
-        {
             "model_id": "yolov7-pose",
             "repository": "instill-ai/model-yolov7-pose-dvc",
             "model_description": "YOLOv7 Pose Estimation model imported from GitHub",
@@ -210,7 +202,7 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
             "model_id": "gpt2",
             "repository": "instill-ai/model-gpt2-megatron-dvc",
             "model_description": "GPT2 Text Generation model imported from GitHub",
-            "model_instance_id": "fp32-345m-4-gpus",
+            "model_instance_id": "fp32-345m-1-gpu",
             "pipeline_id": "gpt2",
             "pipeline_description": "A single model sync pipeline for Text Generation demo with GPT2 model"
         }
