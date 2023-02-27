@@ -192,7 +192,7 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
             "model_id": "stable-diffusion",
             "repository": "instill-ai/model-diffusion-dvc",
             "model_description": "Stable Diffusion Text to Image model imported from GitHub",
-            "model_instance_id": "v1.5-fp16-gpu",
+            "model_instance_id": "v1.5-fp16-gpu1",
             "pipeline_id": "stable-diffusion",
             "pipeline_description": "A single model sync pipeline for Text to Image demo with Stable Diffusion model"
         }
@@ -202,7 +202,7 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
             "model_id": "gpt2",
             "repository": "instill-ai/model-gpt2-megatron-dvc",
             "model_description": "GPT2 Text Generation model imported from GitHub",
-            "model_instance_id": "fp32-345m-1-gpu",
+            "model_instance_id": "fp32-345m-2-gpu",
             "pipeline_id": "gpt2",
             "pipeline_description": "A single model sync pipeline for Text Generation demo with GPT2 model"
         }

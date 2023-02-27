@@ -332,7 +332,7 @@ services:
     image: instill/tritonserver:${TRITON_SERVER_VERSION}
     restart: unless-stopped
     environment:
-      NVIDIA_VISIBLE_DEVICES: 0
+      NVIDIA_VISIBLE_DEVICES: all
     command: tritonserver --model-store=/model-repository --model-control-mode=explicit --allow-http=true --strict-model-config=false
     volumes:
       - model_repository:/model-repository
@@ -341,6 +341,7 @@ services:
       - /var/lib/nvidia/bin:/usr/local/nvidia/bin
     devices:
       - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidia1:/dev/nvidia1
       - /dev/nvidia-uvm:/dev/nvidia-uvm
       - /dev/nvidiactl:/dev/nvidiactl
     healthcheck:
