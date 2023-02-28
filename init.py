@@ -202,7 +202,7 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
             "model_id": "gpt2",
             "repository": "instill-ai/model-gpt2-megatron-dvc",
             "model_description": "GPT2 Text Generation model imported from GitHub",
-            "model_instance_id": "fp32-345m-2-gpu",
+            "model_instance_id": "fp32-345m-4-gpu",
             "pipeline_id": "gpt2",
             "pipeline_description": "A single model sync pipeline for Text Generation demo with GPT2 model"
         }
