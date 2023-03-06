@@ -314,7 +314,8 @@ services:
       NEXT_SERVER_API_GATEWAY_BASE_URL: http://${API_GATEWAY_HOST}:${API_GATEWAY_PORT}
       NEXT_PUBLIC_INSTILL_AI_USER_COOKIE_NAME: instill-ai-user
       NEXT_PUBLIC_SELF_SIGNED_CERTIFICATION: "false"
-      NODE_ENV: production
+      NEXT_PUBLIC_DISABLE_CREATE_UPDATE_DELETE_RESOURCE: "true"
+      NODE_ENV: development
     ports:
       - ${CONSOLE_PORT}:${CONSOLE_PORT}
     entrypoint: ./entrypoint.sh
