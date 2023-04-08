@@ -13,7 +13,7 @@ ver = "v1alpha"
 api_backend = "localhost:8080"
 
 
-def create_github_model(repository, model_id, description=""):
+def create_github_model(repository, tag, model_id, description=""):
     print("Create a GitHub model: {} from {}".format(model_id, repository))
     model = requests.get(
         f'http://{api_backend}/{ver}/models/{model_id}')
@@ -23,7 +23,8 @@ def create_github_model(repository, model_id, description=""):
             "model_definition": "model-definitions/github",
             "description": description,
             "configuration": {
-                "repository": repository
+                "repository": repository,
+                "tag": tag
             },
         })
     else:
@@ -32,16 +33,16 @@ def create_github_model(repository, model_id, description=""):
     print()
 
 
-def deploy_model_instance(model_id, model_instance_id):
-    print("Deploy a {} model instance: {}".format(model_id, model_instance_id))
+def deploy_model(model_id):
+    print("Deploy a model {}:".format(model_id))
     print()
     deploy_model_inst = requests.post(
-        f'http://{api_backend}/{ver}/models/{model_id}/instances/{model_instance_id}/deploy')
+        f'http://{api_backend}/{ver}/models/{model_id}/deploy')
     print(deploy_model_inst.json())
     print()
 
 
-def create_sync_http_pipeline(pipeline_id, model_instance_name, description=""):
+def create_sync_http_pipeline(pipeline_id, model_name, description=""):
     print("Create a pipeline: {}".format(pipeline_id))
     print()
     pipeline = requests.get(
@@ -52,7 +53,7 @@ def create_sync_http_pipeline(pipeline_id, model_instance_name, description=""):
             "description": description,
             "recipe": {
                 "source": "source-connectors/source-http",
-                "model_instances": [model_instance_name],
+                "models": [model_name],
                 "destination": "destination-connectors/destination-http"
             }
         })
@@ -115,8 +116,8 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "mobilenetv2",
             "repository": "instill-ai/model-mobilenetv2",
+            "tag": "v1.0-gpu",
             "model_description": "MobileNetV2 model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
             "pipeline_id": "mobilenetv2",
             "pipeline_description": "A single model sync pipeline for Image Classfication demo with MobileNetV2 model"
         }
@@ -125,16 +126,16 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "yolov4",
             "repository": "instill-ai/model-yolov4-dvc",
+            "tag": "v1.0-gpu",
             "model_description": "YOLOv4 model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
             "pipeline_id": "yolov4",
             "pipeline_description": "A single model sync pipeline for Object Detection demo with YOLOv4 model"
         },
         {
             "model_id": "yolov7",
             "repository": "instill-ai/model-yolov7-dvc",
+            "tag": "v1.0-gpu",
             "model_description": "YOLOv7 model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
             "pipeline_id": "yolov7",
             "pipeline_description": "A single model sync pipeline for Object Detection demo with YOLOv7 model"
         }
@@ -143,8 +144,8 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "yolov7-pose",
             "repository": "instill-ai/model-yolov7-pose-dvc",
+            "tag": "v1.0-gpu",
             "model_description": "YOLOv7 Pose Estimation model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
             "pipeline_id": "yolov7-pose",
             "pipeline_description": "A single model sync pipeline for Keypoint Detection demo with YOLOv7 Pose Estimation model"
         }
@@ -153,8 +154,8 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "ocr",
             "repository": "instill-ai/model-ocr-dvc",
+            "tag": "v1.0-gpu",
             "model_description": "PSNet + EasyOCR Optical Character Recognition (OCR) model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
             "pipeline_id": "ocr",
             "pipeline_description": "A single model sync pipeline for Optical Character Recognition (OCR) demo"
         }
@@ -163,16 +164,16 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "instance-segmentation",
             "repository": "instill-ai/model-instance-segmentation-dvc",
+            "tag": "v1.0-gpu",
             "model_description": "Mask RCNN Instance Segmentation model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
             "pipeline_id": "instance-segmentation",
             "pipeline_description": "A single model sync pipeline for Instance Segmentation demo with Mask RCNN model"
         },
         {
             "model_id": "stomata-instance-segmentation",
             "repository": "instill-ai/model-stomata-instance-segmentation-dvc",
+            "tag": "v2.0-gpu",
             "model_description": "Stomata Instance Segmentation model imported from GitHub",
-            "model_instance_id": "v2.0-gpu",
             "pipeline_id": "stomata",
             "pipeline_description": "A single model sync pipeline for Stomata Instance Segmentation demo with custom trained Mask RCNN model"
         }
@@ -181,8 +182,8 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "semantic-segmentation",
             "repository": "instill-ai/model-semantic-segmentation-dvc",
+            "tag": "v1.0-gpu",
             "model_description": "Lite R-ASPP based on MobileNetV3 Semantic Segmentation model imported from GitHub",
-            "model_instance_id": "v1.0-gpu",
             "pipeline_id": "semantic-segmentation",
             "pipeline_description": "A single model sync pipeline for Semantic Segmentation demo"
         }
@@ -191,8 +192,8 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "stable-diffusion",
             "repository": "instill-ai/model-diffusion-dvc",
+            "tag": "v1.5-fp16-gpu1",
             "model_description": "Stable Diffusion Text to Image model imported from GitHub",
-            "model_instance_id": "v1.5-fp16-gpu1",
             "pipeline_id": "stable-diffusion",
             "pipeline_description": "A single model sync pipeline for Text to Image demo with Stable Diffusion model"
         }
@@ -201,24 +202,24 @@ github: typing.Dict[str, typing.List[typing.Dict[str, str]]] = {
         {
             "model_id": "gpt2",
             "repository": "instill-ai/model-gpt2-megatron-dvc",
+            "tag": "fp32-345m-2-gpu",
             "model_description": "GPT2 Text Generation model imported from GitHub",
-            "model_instance_id": "fp32-345m-2-gpu",
             "pipeline_id": "gpt2",
             "pipeline_description": "A single model sync pipeline for Text Generation demo with GPT2 model"
         }
     ]
 }
+
 for task, item_ls in github.items():
     print("###################### {}".format(task))
     print()
     for item in item_ls:
         model_id = item["model_id"]
-        model_instance_id = item["model_instance_id"]
-        create_github_model(item["repository"], model_id,
+        create_github_model(item["repository"], item["tag"], model_id,
                             item["model_description"])
         time.sleep(5)
-        deploy_model_instance(model_id, model_instance_id)
+        deploy_model(model_id)
         time.sleep(5)
-        model_instance_name = f"models/{model_id}/instances/{model_instance_id}"
+        model_name = f"models/{model_id}"
         create_sync_http_pipeline(
-            item["pipeline_id"], model_instance_name, item["pipeline_description"])
+            item["pipeline_id"], model_name, item["pipeline_description"])
